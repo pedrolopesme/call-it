@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaulAttempts = 10
+	DefaultAttempts = 10
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 	app.Version = "0.0.1-beta"
 
 	app.Action = func(c *cli.Context) error {
-		call := cmds.BuildCall(c.Args(), DefaulAttempts)
+		call := cmds.BuildCall(c.Args(), DefaultAttempts)
 		cmds.MakeA(call)
 		return nil
 	}
