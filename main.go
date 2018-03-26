@@ -37,10 +37,16 @@ func buildCall(args cli.Args) (call Call){
 func makeA(call Call){
 	results := make(map[int]int)
 
+	fmt.Print("\n")
 	for call.attempts > 0{
 		response, _ := http.Get(call.url)
 		results[response.StatusCode]++
 		call.attempts--
+		fmt.Print(". ")
+
+		if call.attempts % 30 == 0{
+			fmt.Print("\n")
+		}
 	}
 
 	fmt.Println("\n\nResults:")
