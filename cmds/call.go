@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"net/http"
-	"github.com/urfave/cli"
+	"errors"
+	"net/url"
 )
 
 // A Call represents the very basic structure to
@@ -16,35 +17,70 @@ type Call struct {
 }
 
 // Parses all given arguments and transform them into a Call
-func BuildCall(args cli.Args, maxAttempts int) (call Call){
-	url := args.Get(0)
-	attempts, err := strconv.Atoi(args.Get(1))
-	if err != nil {
-		fmt.Println("Number of attemps invalid. Using default: " + strconv.Itoa(maxAttempts))
-		attempts = maxAttempts
+func BuildCall(args []string, maxAttempts int) (call Call, err error) {
+	isValid, err := validate(args)
+	if isValid == false {
+		return
 	}
-	call = Call{url, attempts}
+
+	callUrl := args[0]
+	attempts, err := getAttempts(args, maxAttempts)
+	if err != nil {
+		return
+	}
+
+	call = Call{callUrl, attempts}
+	return
+}
+
+// Checks if the given parameters are valid
+func validate(args []string) (result bool, err error) {
+	if args == nil || len(args) < 1 {
+		return false, errors.New("invalidArguments")
+	}
+
+	_, err = url.ParseRequestURI(args[0])
+	if err != nil {
+		return false, errors.New("invalidUrl ")
+	}
+
+	return true, nil
+}
+
+// Tries to parse maxAttempts number. If it wasn't possible, returns
+// default attempts
+func getAttempts(args []string, defaultAttempts int) (attempts int, err error) {
+	if(len(args) == 1) {
+		attempts = 	defaultAttempts
+		return
+	}
+
+	attempts, attempsErr := strconv.Atoi(args[1])
+	if err != attempsErr || attempts == 0 {
+		fmt.Println("Number of attemps invalid. Using default: " + strconv.Itoa(defaultAttempts))
+		attempts = defaultAttempts
+	}
 	return
 }
 
 // Make a call
-func MakeA(call Call){
+func MakeA(call Call) {
 	results := make(map[int]int)
 
 	fmt.Print("\n")
-	for call.attempts > 0{
+	for call.attempts > 0 {
 		response, _ := http.Get(call.url)
 		results[response.StatusCode]++
 		call.attempts--
 		fmt.Print(". ")
 
-		if call.attempts % 30 == 0{
+		if call.attempts%30 == 0 {
 			fmt.Print("\n")
 		}
 	}
 
 	fmt.Println("\n\nResults:")
 	for k, v := range results {
-		fmt.Printf("Status "+ strconv.Itoa(k) + " - " + strconv.Itoa(v) + " times\n")
+		fmt.Printf("Status " + strconv.Itoa(k) + " - " + strconv.Itoa(v) + " times\n")
 	}
 }
