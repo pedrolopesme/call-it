@@ -1,4 +1,4 @@
-package cmds
+package call
 
 import (
 	"testing"
@@ -31,14 +31,36 @@ func (s *MySuite) TestBuildCallWithInValidUrl(c *C) {
 	c.Assert(err, NotNil)
 }
 
-func (s *MySuite) TestBuildCallWithoutAttempts(c *C) {
-	params := []string{"http://www.dummy.com"}
-	call, _:= BuildCall(params, 50)
-	c.Assert(call.attempts, Equals, 50)
+func (s *MySuite) TestParseAttempts(c *C) {
+	params := []string{"http://www.dummy.com", "10"}
+	attempts, _:= ParseAttempts(params, 50)
+	c.Assert(attempts, Equals, 10)
 }
 
-func (s *MySuite) TestBuildCallWithInValidAttemptsFormat(c *C) {
+func (s *MySuite) TestParseAttemptsWithoutAttempts(c *C) {
+	params := []string{"http://www.dummy.com"}
+	attempts, _:= ParseAttempts(params, 50)
+	c.Assert(attempts, Equals, 50)
+}
+
+func (s *MySuite) TestParseAttemptsInValidAttemptsFormat(c *C) {
 	params := []string{"http://www.dummy.com", "dummyAttempts"}
-	call, _:= BuildCall(params, 50)
-	c.Assert(call.attempts, Equals, 50)
+	attempts, _:= ParseAttempts(params, 50)
+	c.Assert(attempts, Equals, 50)
+}
+
+func (s *MySuite) TestMakeCallsWhenURLExists(c *C) {
+	c.Fail()
+}
+
+func (s *MySuite) TestMakeCallsWhenURLDoesntExist(c *C) {
+	c.Fail()
+}
+
+func (s *MySuite) TestMakeCallsReturnTheSameStatusCode(c *C) {
+	c.Fail()
+}
+
+func (s *MySuite) TestMakeCallsReturnMultipleStatusCodes(c *C) {
+	c.Fail()
 }

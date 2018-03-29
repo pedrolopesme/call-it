@@ -1,4 +1,4 @@
-package cmds
+package call
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func BuildCall(args []string, maxAttempts int) (call Call, err error) {
 	}
 
 	callUrl := args[0]
-	attempts, err := getAttempts(args, maxAttempts)
+	attempts, err := ParseAttempts(args, maxAttempts)
 	if err != nil {
 		return
 	}
@@ -49,7 +49,7 @@ func validate(args []string) (result bool, err error) {
 
 // Tries to parse maxAttempts number. If it wasn't possible, returns
 // default attempts
-func getAttempts(args []string, defaultAttempts int) (attempts int, err error) {
+func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error) {
 	if(len(args) == 1) {
 		attempts = 	defaultAttempts
 		return

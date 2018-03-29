@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"github.com/urfave/cli"
-	"github.com/pedrolopesme/call-it/cmds"
+	"github.com/pedrolopesme/call-it/call"
 	"fmt"
 )
 
@@ -20,13 +20,13 @@ func main() {
 	app.Version = "0.0.1-beta"
 
 	app.Action = func(c *cli.Context) error {
-		call, err := cmds.BuildCall(c.Args(), DefaultAttempts)
+		callAttempt, err := call.BuildCall(c.Args(), DefaultAttempts)
 		if err != nil {
 			fmt.Println("It was impossible to parse arguments")
 			os.Exit(1)
 		}
 
-		cmds.MakeA(call)
+		call.MakeA(callAttempt)
 		return nil
 	}
 
