@@ -26,7 +26,8 @@ func main() {
 			os.Exit(1)
 		}
 
-		call.MakeA(callAttempt)
+		results := call.MakeA(callAttempt)
+		call.PrintResults(results)
 		return nil
 	}
 

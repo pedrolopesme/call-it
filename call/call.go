@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"errors"
 	"net/url"
+	"log"
 )
 
 // A Call represents the very basic structure to
@@ -50,8 +51,8 @@ func validate(args []string) (result bool, err error) {
 // Tries to parse maxAttempts number. If it wasn't possible, returns
 // default attempts
 func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error) {
-	if(len(args) == 1) {
-		attempts = 	defaultAttempts
+	if len(args) == 1 {
+		attempts = defaultAttempts
 		return
 	}
 
@@ -63,13 +64,17 @@ func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error)
 	return
 }
 
-// Make a call
-func MakeA(call Call) {
-	results := make(map[int]int)
+// Make a call and return its results
+func MakeA(call Call) (results map[int]int) {
+	results = make(map[int]int)
 
 	fmt.Print("\n")
 	for call.attempts > 0 {
-		response, _ := http.Get(call.url)
+		response, err := http.Get(call.url)
+		if err != nil {
+			log.Fatal("Something got wrong ", err)
+		}
+
 		results[response.StatusCode]++
 		call.attempts--
 		fmt.Print(". ")
@@ -79,6 +84,11 @@ func MakeA(call Call) {
 		}
 	}
 
+	return
+}
+
+// Print results formatted by Status
+func PrintResults(results map[int]int) {
 	fmt.Println("\n\nResults:")
 	for k, v := range results {
 		fmt.Printf("Status " + strconv.Itoa(k) + " - " + strconv.Itoa(v) + " times\n")

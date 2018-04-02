@@ -3,6 +3,7 @@ package call
 import (
 	"testing"
 	. "gopkg.in/check.v1"
+	"gopkg.in/jarcoal/httpmock.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -50,15 +51,49 @@ func (s *MySuite) TestParseAttemptsInValidAttemptsFormat(c *C) {
 }
 
 func (s *MySuite) TestMakeCallsWhenURLExists(c *C) {
-	c.Fail()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "http://www.foo.com/bar",
+		httpmock.NewStringResponder(200, `[]`))
+
+	params := []string{"http://www.foo.com/bar", "10"}
+	call, _ := BuildCall(params, 1)
+	results := MakeA(call)
+
+	c.Assert(len(results), Equals, 1)
+	c.Assert(results[200], Equals, 10)
 }
 
 func (s *MySuite) TestMakeCallsWhenURLDoesntExist(c *C) {
-	c.Fail()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "http://www.foo.com/bar",
+		httpmock.NewStringResponder(404, `[]`))
+
+	params := []string{"http://www.foo.com/bar", "10"}
+	call, _ := BuildCall(params, 1)
+	results := MakeA(call)
+
+	c.Assert(len(results), Equals, 1)
+	c.Assert(results[200], Equals, 0)
+	c.Assert(results[404], Equals, 10)
 }
 
 func (s *MySuite) TestMakeCallsReturnTheSameStatusCode(c *C) {
-	c.Fail()
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "http://www.foo.com/bar",
+		httpmock.NewStringResponder(200, `[]`))
+
+	params := []string{"http://www.foo.com/bar", "100"}
+	call, _ := BuildCall(params, 1)
+	results := MakeA(call)
+
+	c.Assert(len(results), Equals, 1)
+	c.Assert(results[200], Equals, 100)
 }
 
 func (s *MySuite) TestMakeCallsReturnMultipleStatusCodes(c *C) {
