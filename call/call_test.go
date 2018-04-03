@@ -95,7 +95,3 @@ func (s *MySuite) TestMakeCallsReturnTheSameStatusCode(c *C) {
 	c.Assert(len(results), Equals, 1)
 	c.Assert(results[200], Equals, 100)
 }
-
-func (s *MySuite) TestMakeCallsReturnMultipleStatusCodes(c *C) {
-	c.Fail()
-}
