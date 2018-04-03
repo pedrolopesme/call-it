@@ -32,3 +32,6 @@
 
 # IntelliJ
 out/
+
+# Ignoring vendor
+vendor/*
