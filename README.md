@@ -1,6 +1,15 @@
 # Call it [![Build Status](https://travis-ci.org/pedrolopesme/call-it.svg?branch=master)](https://travis-ci.org/pedrolopesme/call-it)
 A simple program to benchmark URL responses across multiple requests
 
+### Makefile
+
+This project provides a Makefile with all common operations need to develop, test and build call-it.
+
+* build: generates binaries
+* test: runs all tests
+* clean: removes binaries
+* run: executes main func
+
 
 ### Building
 
