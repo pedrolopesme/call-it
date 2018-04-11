@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/url"
 	"log"
+	"sync"
 )
 
 // A Call represents the very basic structure to
@@ -90,21 +91,29 @@ func ParseConcurrentCalls(args []string, defaultConcurrentCalls int) (calls int,
 func MakeA(call Call) (results map[int]int) {
 	results = make(map[int]int)
 
-	fmt.Print("\n")
-	for call.attempts > 0 {
-		response, err := http.Get(call.url)
-		if err != nil {
-			log.Fatal("Something got wrong ", err)
-		}
+	wg := sync.WaitGroup{}
 
-		results[response.StatusCode]++
-		call.attempts--
-		fmt.Print(". ")
+	for i := 0; i < call.concurrent; i++ {
+		wg.Add(1)
 
-		if call.attempts%30 == 0 {
-			fmt.Print("\n")
-		}
+		go func() {
+
+			for call.attempts > 0 {
+				response, err := http.Get(call.url)
+				if err != nil {
+					log.Fatal("Something got wrong ", err)
+				}
+
+				results[response.StatusCode]++
+				call.attempts--
+				fmt.Print(". ")
+			}
+
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 
 	return
 }
