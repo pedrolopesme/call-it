@@ -13,12 +13,13 @@ import (
 // start calling some URL out. It carries all data
 // needed to call-it operate on.
 type Call struct {
-	url      string // The endpoint to be tested
-	attempts int    // the number of attempts
+	url        string // The endpoint to be tested
+	attempts   int    // number of attempts
+	concurrent int    // number of concurrent calls
 }
 
 // Parses all given arguments and transform them into a Call
-func BuildCall(args []string, maxAttempts int) (call Call, err error) {
+func BuildCall(args []string, maxAttempts int, maxConcurrentCalls int) (call Call, err error) {
 	isValid, err := validate(args)
 	if isValid == false {
 		return
@@ -30,7 +31,12 @@ func BuildCall(args []string, maxAttempts int) (call Call, err error) {
 		return
 	}
 
-	call = Call{callUrl, attempts}
+	concurrentCalls, err := ParseConcurrentCalls(args, maxConcurrentCalls)
+	if err != nil {
+		return
+	}
+
+	call = Call{callUrl, attempts, concurrentCalls}
 	return
 }
 
@@ -60,6 +66,22 @@ func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error)
 	if err != attemptsErr || attempts == 0 {
 		fmt.Println("Number of attempts invalid. Using default: " + strconv.Itoa(defaultAttempts))
 		attempts = defaultAttempts
+	}
+	return
+}
+
+// Tries to parse maxConcurrentCalls number. If it wasn't possible, returns
+// default concurrent calls
+func ParseConcurrentCalls(args []string, defaultConcurrentCalls int) (calls int, err error) {
+	if len(args) <= 2 {
+		calls = defaultConcurrentCalls
+		return
+	}
+
+	calls, concurrentErr := strconv.Atoi(args[2])
+	if err != concurrentErr || calls == 0 {
+		fmt.Println("Number of concurrent calls. Using default: " + strconv.Itoa(defaultConcurrentCalls))
+		calls = defaultConcurrentCalls
 	}
 	return
 }

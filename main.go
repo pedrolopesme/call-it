@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	DefaultAttempts = 10
+	DefaultAttempts        = 10
+	DefaultConcurrentCalls = 10
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	app.Version = "0.0.1-beta"
 
 	app.Action = func(c *cli.Context) error {
-		callAttempt, err := call.BuildCall(c.Args(), DefaultAttempts)
+		callAttempt, err := call.BuildCall(c.Args(), DefaultAttempts, DefaultConcurrentCalls)
 		if err != nil {
 			fmt.Println("It was impossible to parse arguments")
 			os.Exit(1)
