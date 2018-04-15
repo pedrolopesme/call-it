@@ -3,6 +3,7 @@ package call
 import (
 	"testing"
 	. "gopkg.in/check.v1"
+	"github.com/pedrolopesme/call-it/parse"
 	"gopkg.in/jarcoal/httpmock.v1"
 )
 
@@ -14,10 +15,9 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestBuildCallWithValidParams(c *C) {
 	params := []string{"http://www.dummy.com", "30"}
-	call, _ := BuildCall(params, 50, 10)
-
-	c.Assert(call.url, Equals, params[0])
-	c.Assert(call.attempts, Equals, 30)
+	cl, _ := parse.BuildCall(params, 50, 10)
+	c.Assert(cl.URL, Equals, params[0])
+	c.Assert(cl.Attempts, Equals, 30)
 }
 
 func (s *MySuite) TestBuildCallWithoutParams(c *C) {
@@ -59,7 +59,7 @@ func (s *MySuite) TestMakeCallsWhenURLExists(c *C) {
 
 	params := []string{"http://www.foo.com/bar", "10"}
 	call, _ := BuildCall(params, 1, 10)
-	results := MakeA(call)
+	results := call.MakeIt()
 
 	c.Assert(len(results), Equals, 1)
 	c.Assert(results[200], Equals, 10)
@@ -74,7 +74,7 @@ func (s *MySuite) TestMakeCallsWhenURLDoesntExist(c *C) {
 
 	params := []string{"http://www.foo.com/bar", "10"}
 	call, _ := BuildCall(params, 1, 10)
-	results := MakeA(call)
+	results := call.MakeIt()
 
 	c.Assert(len(results), Equals, 1)
 	c.Assert(results[200], Equals, 0)
@@ -90,7 +90,7 @@ func (s *MySuite) TestMakeCallsReturnTheSameStatusCode(c *C) {
 
 	params := []string{"http://www.foo.com/bar", "100"}
 	call, _ := BuildCall(params, 1, 10)
-	results := MakeA(call)
+	results := call.MakeIt()
 
 	c.Assert(len(results), Equals, 1)
 	c.Assert(results[200], Equals, 100)
@@ -100,19 +100,19 @@ func (s *MySuite) TestBuildCallWithConcurrentCalls(c *C) {
 	params := []string{"http://www.dummy.com", "30", "50"}
 	call, _ := BuildCall(params, 50, 10)
 
-	c.Assert(call.url, Equals, params[0])
-	c.Assert(call.attempts, Equals, 30)
-	c.Assert(call.concurrent, Equals, 50)
+	c.Assert(call.URL, Equals, params[0])
+	c.Assert(call.Attempts, Equals, 30)
+	c.Assert(call.ConcurrentAttempts, Equals, 50)
 }
 
 func (s *MySuite) TestParseConcurrentCallsWithoutConcurrentParameter(c *C) {
 	params := []string{"http://www.dummy.com"}
-	concurrentCalls, _ := ParseConcurrentCalls(params, 100)
+	concurrentCalls, _ := ParseConcurrentAttempts(params, 100)
 	c.Assert(concurrentCalls, Equals, 100)
 }
 
 func (s *MySuite) TestParseConcurrentCallsWithInValidFormat(c *C) {
 	params := []string{"http://www.dummy.com", "10", "dummyConcurrentCalls"}
-	concurrentCalls, _ := ParseConcurrentCalls(params, 100)
+	concurrentCalls, _ := ParseConcurrentAttempts(params, 100)
 	c.Assert(concurrentCalls, Equals, 100)
 }

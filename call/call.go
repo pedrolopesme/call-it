@@ -2,117 +2,71 @@ package call
 
 import (
 	"fmt"
-	"strconv"
 	"net/http"
-	"errors"
-	"net/url"
 	"log"
 )
+
+// Represents a valid URL, including the protocol and all query strings
+type URL string
+
+// Number of call Attempts. Each call attempt results in a HTTP Status
+// Code that will be used to build the benchmark at the end.
+type Attempts int
+
+// A Result is a map containing all StatusCodes and
+// the total of occurrences.
+type Result map[int]int
+
+// A Call should know how to execute itself, generating
+// a Result from its execution
+type Call interface {
+	MakeIt() Result
+}
 
 // A ConcurrentCall represents the very basic structure to
 // start calling some URL out. It carries all data
 // needed to call-it operate on.
 type ConcurrentCall struct {
-	url        string // The endpoint to be tested
-	attempts   int    // number of attempts
-	concurrent int    // number of concurrent calls
-}
-
-// Parses all given arguments and transform them into a ConcurrentCall
-func BuildCall(args []string, maxAttempts int, maxConcurrentCalls int) (call ConcurrentCall, err error) {
-	isValid, err := validate(args)
-	if isValid == false {
-		return
-	}
-
-	callUrl := args[0]
-	attempts, err := ParseAttempts(args, maxAttempts)
-	if err != nil {
-		return
-	}
-
-	concurrentCalls, err := ParseConcurrentCalls(args, maxConcurrentCalls)
-	if err != nil {
-		return
-	}
-
-	call = ConcurrentCall{callUrl, attempts, concurrentCalls}
-	return
-}
-
-// Checks if the given parameters are valid
-func validate(args []string) (result bool, err error) {
-	if args == nil || len(args) < 1 {
-		return false, errors.New("invalidArguments")
-	}
-
-	_, err = url.ParseRequestURI(args[0])
-	if err != nil {
-		return false, errors.New("invalidUrl ")
-	}
-
-	return true, nil
-}
-
-// Tries to parse maxAttempts number. If it wasn't possible, returns
-// default attempts
-func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error) {
-	if len(args) == 1 {
-		attempts = defaultAttempts
-		return
-	}
-
-	attempts, attemptsErr := strconv.Atoi(args[1])
-	if err != attemptsErr || attempts == 0 {
-		fmt.Println("Number of attempts invalid. Using default: " + strconv.Itoa(defaultAttempts))
-		attempts = defaultAttempts
-	}
-	return
-}
-
-// Tries to parse maxConcurrentCalls number. If it wasn't possible, returns
-// default concurrent calls
-func ParseConcurrentCalls(args []string, defaultConcurrentCalls int) (calls int, err error) {
-	if len(args) <= 2 {
-		calls = defaultConcurrentCalls
-		return
-	}
-
-	calls, concurrentErr := strconv.Atoi(args[2])
-	if err != concurrentErr || calls == 0 {
-		fmt.Println("Number of concurrent calls. Using default: " + strconv.Itoa(defaultConcurrentCalls))
-		calls = defaultConcurrentCalls
-	}
-	return
+	URL                URL      // The endpoint to be tested
+	Attempts           Attempts // number of Attempts
+	ConcurrentAttempts Attempts // number of concurrent Attempts
 }
 
 // Make a call and return its results
-func MakeA(call ConcurrentCall) (results map[int]int) {
+func (call *ConcurrentCall) MakeIt() (results Result) {
 	results = make(map[int]int)
 
-	for call.attempts > 0 {
-		numberOfConcurrentCalls := call.concurrent
-		if numberOfConcurrentCalls > call.attempts {
-			numberOfConcurrentCalls = call.attempts
-		}
-		statusCodeChannel := getUrl(call.url, numberOfConcurrentCalls)
+	for call.Attempts > 0 {
+		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
+		statusCodeChannel := getUrl(call.URL, concurrentAttempts)
 		for statusCode := range statusCodeChannel {
 			results[statusCode]++
 		}
-		call.attempts -= numberOfConcurrentCalls
+		call.Attempts -= concurrentAttempts
 	}
 
 	return
 }
 
-// This func calls an url concurrently
-func getUrl(url string, concurrentCalls int) chan int {
+// It calculates the amount of concurrent calls to be executed,
+// based on the attempts left. It ensures that the next round
+// of concurrent calls will respect the attempts of a given call
+func calcTheNumberOfConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts Attempts) {
+	numberOfConcurrentAttempts = call.ConcurrentAttempts
+	if numberOfConcurrentAttempts > call.Attempts {
+		numberOfConcurrentAttempts = call.Attempts
+	}
+	return
+}
+
+// This func calls an URL concurrently
+func getUrl(url URL, concurrentAttempts Attempts) chan int {
 	statusCode := make(chan int)
 	done := make(chan bool)
 
-	for i := 0; i < concurrentCalls; i ++ {
+	for i := 0; i < int(concurrentAttempts); i ++ {
 		go func() {
-			response, err := http.Get(url)
+			response, err := http.Get(string(url))
 			if err != nil {
 				log.Fatal("Something got wrong ", err)
 			}
@@ -122,9 +76,9 @@ func getUrl(url string, concurrentCalls int) chan int {
 		}()
 	}
 
-	go func(){
-		for i := 0; i < concurrentCalls; i ++ {
-			<- done
+	go func() {
+		for i := 0; i < int(concurrentAttempts); i ++ {
+			<-done
 		}
 		close(statusCode)
 	}()
