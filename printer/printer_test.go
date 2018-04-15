@@ -1,4 +1,4 @@
-package call
+package printer
 
 import (
 	. "gopkg.in/check.v1"
