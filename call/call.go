@@ -116,10 +116,10 @@ func getUrl(url string, concurrentCalls int) chan int {
 			if err != nil {
 				log.Fatal("Something got wrong ", err)
 			}
+			fmt.Print(" . ")
 			statusCode <- response.StatusCode
 			done <- true
 		}()
-		fmt.Print(" . ")
 	}
 
 	go func(){
@@ -130,12 +130,4 @@ func getUrl(url string, concurrentCalls int) chan int {
 	}()
 
 	return statusCode
-}
-
-// Print results formatted by Status
-func PrintResults(results map[int]int) {
-	fmt.Println("\n\nResults:")
-	for k, v := range results {
-		fmt.Printf("Status " + strconv.Itoa(k) + " - " + strconv.Itoa(v) + " times\n")
-	}
 }
