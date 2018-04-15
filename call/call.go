@@ -9,17 +9,17 @@ import (
 	"log"
 )
 
-// A Call represents the very basic structure to
+// A ConcurrentCall represents the very basic structure to
 // start calling some URL out. It carries all data
 // needed to call-it operate on.
-type Call struct {
+type ConcurrentCall struct {
 	url        string // The endpoint to be tested
 	attempts   int    // number of attempts
 	concurrent int    // number of concurrent calls
 }
 
-// Parses all given arguments and transform them into a Call
-func BuildCall(args []string, maxAttempts int, maxConcurrentCalls int) (call Call, err error) {
+// Parses all given arguments and transform them into a ConcurrentCall
+func BuildCall(args []string, maxAttempts int, maxConcurrentCalls int) (call ConcurrentCall, err error) {
 	isValid, err := validate(args)
 	if isValid == false {
 		return
@@ -36,7 +36,7 @@ func BuildCall(args []string, maxAttempts int, maxConcurrentCalls int) (call Cal
 		return
 	}
 
-	call = Call{callUrl, attempts, concurrentCalls}
+	call = ConcurrentCall{callUrl, attempts, concurrentCalls}
 	return
 }
 
@@ -87,7 +87,7 @@ func ParseConcurrentCalls(args []string, defaultConcurrentCalls int) (calls int,
 }
 
 // Make a call and return its results
-func MakeA(call Call) (results map[int]int) {
+func MakeA(call ConcurrentCall) (results map[int]int) {
 	results = make(map[int]int)
 
 	for call.attempts > 0 {
