@@ -15,7 +15,7 @@ func PrintResults(results map[int]int) {
 }
 
 func printHeader() {
-	fmt.Println("\n\n\n")
+	fmt.Println("\n\n\n ")
 	fmt.Println("+---------------------------------------------+")
 	fmt.Println("+ Status Code         | Times                 +")
 	fmt.Println("+---------------------------------------------+")
