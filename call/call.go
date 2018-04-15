@@ -91,29 +91,45 @@ func MakeA(call Call) (results map[int]int) {
 	results = make(map[int]int)
 
 	for call.attempts > 0 {
-		for i := 0; i < call.concurrent; i++ {
-
-			if call.attempts == 0 {
-				break
-			}
-
-			statusCode := make(chan int)
-			go getUrl(call.url, statusCode)
-			results[<-statusCode]++
-			call.attempts--
-			fmt.Print(". ")
+		numberOfConcurrentCalls := call.concurrent
+		if numberOfConcurrentCalls > call.attempts {
+			numberOfConcurrentCalls = call.attempts
 		}
+		statusCodeChannel := getUrl(call.url, numberOfConcurrentCalls)
+		for statusCode := range statusCodeChannel {
+			results[statusCode]++
+		}
+		call.attempts -= numberOfConcurrentCalls
 	}
-	
+
 	return
 }
 
-func getUrl(url string, statusCode chan int) {
-	response, err := http.Get(url)
-	if err != nil {
-		log.Fatal("Something got wrong ", err)
+// This func calls an url concurrently
+func getUrl(url string, concurrentCalls int) chan int {
+	statusCode := make(chan int)
+	done := make(chan bool)
+
+	for i := 0; i < concurrentCalls; i ++ {
+		go func() {
+			response, err := http.Get(url)
+			if err != nil {
+				log.Fatal("Something got wrong ", err)
+			}
+			statusCode <- response.StatusCode
+			done <- true
+		}()
+		fmt.Print(" . ")
 	}
-	statusCode <- response.StatusCode
+
+	go func(){
+		for i := 0; i < concurrentCalls; i ++ {
+			<- done
+		}
+		close(statusCode)
+	}()
+
+	return statusCode
 }
 
 // Print results formatted by Status
