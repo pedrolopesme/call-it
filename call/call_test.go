@@ -1,56 +1,53 @@
 package call
 
 import (
-	"testing"
-	. "gopkg.in/check.v1"
-	"github.com/pedrolopesme/call-it/parse"
 	"gopkg.in/jarcoal/httpmock.v1"
+	"testing"
+	"github.com/stretchr/testify/assert"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type MySuite struct{}
-
-var _ = Suite(&MySuite{})
-
-func (s *MySuite) TestBuildCallWithValidParams(c *C) {
+func TestBuildCallWithValidParams(test *testing.T) {
 	params := []string{"http://www.dummy.com", "30"}
-	cl, _ := parse.BuildCall(params, 50, 10)
-	c.Assert(cl.URL, Equals, params[0])
-	c.Assert(cl.Attempts, Equals, 30)
+	cl, _ := BuildCall(params, 50, 10)
+
+	assert.Equal(test, URL(params[0]), cl.URL, )
+	assert.Equal(test, Attempts(30), cl.Attempts)
 }
 
-func (s *MySuite) TestBuildCallWithoutParams(c *C) {
+func TestBuildCallWithoutParams(test *testing.T) {
 	var params []string
 	_, err := BuildCall(params, 50, 10)
-	c.Assert(err, NotNil)
+
+	assert.NotNil(test, err)
 }
 
-func (s *MySuite) TestBuildCallWithInValidUrl(c *C) {
+func TestBuildCallWithInValidUrl(test *testing.T) {
 	params := []string{"dummy", "30"}
 	_, err := BuildCall(params, 50, 10)
-	c.Assert(err, NotNil)
+	assert.NotNil(test, err)
 }
 
-func (s *MySuite) TestParseAttempts(c *C) {
+func TestParseAttempts(test *testing.T) {
 	params := []string{"http://www.dummy.com", "10"}
 	attempts, _ := ParseAttempts(params, 50)
-	c.Assert(attempts, Equals, 10)
+
+	assert.Equal(test, Attempts(10), attempts)
 }
 
-func (s *MySuite) TestParseAttemptsWithoutAttempts(c *C) {
+func TestParseAttemptsWithoutAttempts(test *testing.T) {
 	params := []string{"http://www.dummy.com"}
 	attempts, _ := ParseAttempts(params, 50)
-	c.Assert(attempts, Equals, 50)
+	assert.Equal(test, Attempts(50), attempts)
 }
 
-func (s *MySuite) TestParseAttemptsInValidAttemptsFormat(c *C) {
+func TestParseAttemptsWithInvalidFormat(test *testing.T) {
 	params := []string{"http://www.dummy.com", "dummyAttempts"}
 	attempts, _ := ParseAttempts(params, 50)
-	c.Assert(attempts, Equals, 50)
+
+	assert.Equal(test, Attempts(50), attempts)
 }
 
-func (s *MySuite) TestMakeCallsWhenURLExists(c *C) {
+func TestMakeCallsWhenURLExists(test *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -58,14 +55,14 @@ func (s *MySuite) TestMakeCallsWhenURLExists(c *C) {
 		httpmock.NewStringResponder(200, `[]`))
 
 	params := []string{"http://www.foo.com/bar", "10"}
-	call, _ := BuildCall(params, 1, 10)
+	call, _ := BuildCall(params, 1, 100)
 	results := call.MakeIt()
 
-	c.Assert(len(results), Equals, 1)
-	c.Assert(results[200], Equals, 10)
+	assert.Equal(test, 1, len(results))
+	assert.Equal(test, 10, results[200])
 }
 
-func (s *MySuite) TestMakeCallsWhenURLDoesntExist(c *C) {
+func TestMakeCallsWhenURLDoesntExist(test *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -73,15 +70,15 @@ func (s *MySuite) TestMakeCallsWhenURLDoesntExist(c *C) {
 		httpmock.NewStringResponder(404, `[]`))
 
 	params := []string{"http://www.foo.com/bar", "10"}
-	call, _ := BuildCall(params, 1, 10)
+	call, _ := BuildCall(params, 1, 100)
 	results := call.MakeIt()
 
-	c.Assert(len(results), Equals, 1)
-	c.Assert(results[200], Equals, 0)
-	c.Assert(results[404], Equals, 10)
+	assert.Equal(test, 1, len(results))
+	assert.Equal(test, 0, results[200])
+	assert.Equal(test, 10, results[404])
 }
 
-func (s *MySuite) TestMakeCallsReturnTheSameStatusCode(c *C) {
+func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -92,27 +89,29 @@ func (s *MySuite) TestMakeCallsReturnTheSameStatusCode(c *C) {
 	call, _ := BuildCall(params, 1, 10)
 	results := call.MakeIt()
 
-	c.Assert(len(results), Equals, 1)
-	c.Assert(results[200], Equals, 100)
+	assert.Equal(test, 1, len(results))
+	assert.Equal(test, 100, results[200])
 }
 
-func (s *MySuite) TestBuildCallWithConcurrentCalls(c *C) {
+func TestBuildCallWithConcurrentCalls(test *testing.T) {
 	params := []string{"http://www.dummy.com", "30", "50"}
-	call, _ := BuildCall(params, 50, 10)
+	call, _ := BuildCall(params, 100, 200)
 
-	c.Assert(call.URL, Equals, params[0])
-	c.Assert(call.Attempts, Equals, 30)
-	c.Assert(call.ConcurrentAttempts, Equals, 50)
+	assert.Equal(test, URL(params[0]), call.URL)
+	assert.Equal(test, Attempts(30), call.Attempts, )
+	assert.Equal(test, Attempts(50), call.ConcurrentAttempts)
 }
 
-func (s *MySuite) TestParseConcurrentCallsWithoutConcurrentParameter(c *C) {
+func TestParseConcurrentCallsWithoutConcurrentParameter(test *testing.T) {
 	params := []string{"http://www.dummy.com"}
 	concurrentCalls, _ := ParseConcurrentAttempts(params, 100)
-	c.Assert(concurrentCalls, Equals, 100)
+
+	assert.Equal(test, Attempts(100), concurrentCalls)
 }
 
-func (s *MySuite) TestParseConcurrentCallsWithInValidFormat(c *C) {
+func TestParseConcurrentCallsWithInValidFormat(test *testing.T) {
 	params := []string{"http://www.dummy.com", "10", "dummyConcurrentCalls"}
 	concurrentCalls, _ := ParseConcurrentAttempts(params, 100)
-	c.Assert(concurrentCalls, Equals, 100)
+
+	assert.Equal(test, Attempts(100), concurrentCalls)
 }
