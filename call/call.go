@@ -34,7 +34,7 @@ type ConcurrentCall struct {
 
 // Make a call and return its results
 func (call *ConcurrentCall) MakeIt() (results Result) {
-	results = make(map[int]int)
+	results = make(Result)
 
 	for call.Attempts > 0 {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
