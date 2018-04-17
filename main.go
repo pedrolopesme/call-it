@@ -4,10 +4,8 @@ import (
 	"log"
 	"os"
 	"github.com/urfave/cli"
-	"github.com/pedrolopesme/call-it/call"
-	"github.com/pedrolopesme/call-it/parse"
-	"github.com/pedrolopesme/call-it/printer"
 	"fmt"
+	"github.com/pedrolopesme/call-it/call"
 )
 
 const (
@@ -23,14 +21,14 @@ func main() {
 	app.Version = "0.0.1-beta"
 
 	app.Action = func(c *cli.Context) error {
-		callAttempt, err := parse.BuildCall(c.Args(), DefaultAttempts, DefaultConcurrentCalls)
+		callAttempt, err := call.BuildCall(c.Args(), DefaultAttempts, DefaultConcurrentCalls)
 		if err != nil {
 			fmt.Println("It was impossible to parse arguments")
 			os.Exit(1)
 		}
 
 		results := callAttempt.MakeIt()
-		printer.PrintResults(results)
+		call.PrintResults(results)
 		return nil
 	}
 
