@@ -1,25 +1,24 @@
-package parse
+package call
 
 import (
 	"strconv"
 	"fmt"
 	"errors"
 	"net/url"
-	c "github.com/pedrolopesme/call-it/call"
 )
 
 // Parses all given arguments and transform them into a ConcurrentCall
-func BuildCall(args []string, maxAttempts c.Attempts, maxConcurrentAttempts c.Attempts) (call c.ConcurrentCall, err error) {
-	var callUrl c.URL
-	var attempts c.Attempts
-	var concurrentAttempts c.Attempts
+func BuildCall(args []string, maxAttempts Attempts, maxConcurrentAttempts Attempts) (call ConcurrentCall, err error) {
+	var callUrl URL
+	var attempts Attempts
+	var concurrentAttempts Attempts
 
 	isValid, err := validate(args)
 	if isValid == false {
 		return
 	}
 
-	callUrl = c.URL(args[0])
+	callUrl = URL(args[0])
 	attempts, err = ParseAttempts(args, maxAttempts)
 	if err != nil {
 		return
@@ -30,7 +29,7 @@ func BuildCall(args []string, maxAttempts c.Attempts, maxConcurrentAttempts c.At
 		return
 	}
 
-	call = c.ConcurrentCall{callUrl, attempts, concurrentAttempts}
+	call = ConcurrentCall{callUrl, attempts, concurrentAttempts}
 	return
 }
 
@@ -50,34 +49,36 @@ func validate(args []string) (result bool, err error) {
 
 // Tries to parse maxAttempts number. If it wasn't possible, returns
 // default attempts
-func ParseAttempts(args []string, defaultAttempts c.Attempts) (attempts c.Attempts, err error) {
+func ParseAttempts(args []string, defaultAttempts Attempts) (attempts Attempts, err error) {
 	if len(args) == 1 {
 		attempts = defaultAttempts
 		return
 	}
 
 	attemptsString, attemptsErr := strconv.Atoi(args[1])
-	if err != attemptsErr || attempts == 0 {
+	if err != attemptsErr {
 		fmt.Println("Number of attempts invalid. Using default: " + strconv.Itoa(int(defaultAttempts)))
 		attempts = defaultAttempts
+	} else {
+		attempts = Attempts(attemptsString)
 	}
-	attempts = c.Attempts(attemptsString)
 	return
 }
 
 // Tries to parse the concurrent attempts number. If it wasn't possible, returns
 // default concurrent attempts
-func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts c.Attempts) (attempts c.Attempts, err error) {
+func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts Attempts) (attempts Attempts, err error) {
 	if len(args) <= 2 {
 		attempts = defaultConcurrentAttempts
 		return
 	}
 
 	attemptsString, concurrentErr := strconv.Atoi(args[2])
-	if err != concurrentErr || attempts == 0 {
+	if err != concurrentErr {
 		fmt.Println("Number of concurrent attempts. Using default: " + strconv.Itoa(int(defaultConcurrentAttempts)))
 		attempts = defaultConcurrentAttempts
+	} else {
+		attempts = Attempts(attemptsString)
 	}
-	attempts = c.Attempts(attemptsString)
 	return
 }
