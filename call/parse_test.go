@@ -1,15 +1,15 @@
 package call
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestBuildCallWithValidParams(test *testing.T) {
 	params := []string{"http://www.dummy.com", "30"}
 	cl, _ := BuildCall(params, 50, 10)
 
-	assert.Equal(test, URL(params[0]), cl.URL, )
+	assert.Equal(test, URL(params[0]), cl.URL)
 	assert.Equal(test, Attempts(30), cl.Attempts)
 }
 
@@ -51,7 +51,7 @@ func TestBuildCallWithConcurrentCalls(test *testing.T) {
 	call, _ := BuildCall(params, 100, 200)
 
 	assert.Equal(test, URL(params[0]), call.URL)
-	assert.Equal(test, Attempts(30), call.Attempts, )
+	assert.Equal(test, Attempts(30), call.Attempts)
 	assert.Equal(test, Attempts(50), call.ConcurrentAttempts)
 }
 

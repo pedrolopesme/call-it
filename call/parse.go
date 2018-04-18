@@ -1,10 +1,10 @@
 package call
 
 import (
-	"strconv"
-	"fmt"
 	"errors"
+	"fmt"
 	"net/url"
+	"strconv"
 )
 
 // Parses all given arguments and transform them into a ConcurrentCall
