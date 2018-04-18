@@ -2,8 +2,8 @@ package call
 
 import (
 	"fmt"
-	"net/http"
 	"log"
+	"net/http"
 )
 
 // Represents a valid URL, including the protocol and all query strings
@@ -64,7 +64,7 @@ func getUrl(url URL, concurrentAttempts Attempts) chan int {
 	statusCode := make(chan int)
 	done := make(chan bool)
 
-	for i := 0; i < int(concurrentAttempts); i ++ {
+	for i := 0; i < int(concurrentAttempts); i++ {
 		go func() {
 			response, err := http.Get(string(url))
 			if err != nil {
@@ -77,7 +77,7 @@ func getUrl(url URL, concurrentAttempts Attempts) chan int {
 	}
 
 	go func() {
-		for i := 0; i < int(concurrentAttempts); i ++ {
+		for i := 0; i < int(concurrentAttempts); i++ {
 			<-done
 		}
 		close(statusCode)

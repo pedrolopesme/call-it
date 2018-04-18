@@ -1,9 +1,9 @@
 package call
 
 import (
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/jarcoal/httpmock.v1"
 	"testing"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMakeCallsWhenURLExists(test *testing.T) {
