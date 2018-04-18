@@ -9,14 +9,10 @@ import (
 // Represents a valid URL, including the protocol and all query strings
 type URL string
 
-// A Result is a map containing all StatusCodes and
-// the total of occurrences.
-type Result map[int]int
-
 // A Call should know how to execute itself, generating
 // a Result from its execution
 type Call interface {
-	MakeIt() Result
+	MakeIt() map[int]int
 }
 
 // A ConcurrentCall represents the very basic structure to
@@ -29,8 +25,8 @@ type ConcurrentCall struct {
 }
 
 // Make a call and return its results
-func (call *ConcurrentCall) MakeIt() (results Result) {
-	results = make(Result)
+func (call *ConcurrentCall) MakeIt() (results map[int]int) {
+	results = make(map[int]int)
 
 	for call.Attempts > 0 {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
