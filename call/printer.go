@@ -11,7 +11,7 @@ func PrintResults(results map[int]int) {
 	for statusCode, times := range results {
 		printLine(statusCode, times)
 	}
-	printFooter();
+	printFooter()
 }
 
 func printHeader() {
