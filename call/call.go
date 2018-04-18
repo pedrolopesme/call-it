@@ -7,9 +7,6 @@ import (
 	"net/url"
 )
 
-// Represents a valid URL, including the protocol and all query strings
-type URL string
-
 // A Call should know how to execute itself, generating
 // a Result from its execution
 type Call interface {
