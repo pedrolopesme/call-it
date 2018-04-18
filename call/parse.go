@@ -8,17 +8,22 @@ import (
 )
 
 // Parses all given arguments and transform them into a ConcurrentCall
-func BuildCall(args []string, maxAttempts Attempts, maxConcurrentAttempts Attempts) (call ConcurrentCall, err error) {
-	var callUrl URL
-	var attempts Attempts
-	var concurrentAttempts Attempts
+func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call ConcurrentCall, err error) {
+	var (
+		callURL            *url.URL
+		attempts           int
+		concurrentAttempts int
+	)
 
 	isValid, err := validate(args)
 	if isValid == false {
 		return
 	}
 
-	callUrl = URL(args[0])
+	callURL, err = url.Parse(args[0])
+	if err != nil {
+		return
+	}
 	attempts, err = ParseAttempts(args, maxAttempts)
 	if err != nil {
 		return
@@ -29,7 +34,11 @@ func BuildCall(args []string, maxAttempts Attempts, maxConcurrentAttempts Attemp
 		return
 	}
 
-	call = ConcurrentCall{callUrl, attempts, concurrentAttempts}
+	call = ConcurrentCall{
+		URL:                callURL,
+		Attempts:           attempts,
+		ConcurrentAttempts: concurrentAttempts,
+	}
 	return
 }
 

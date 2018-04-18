@@ -17,9 +17,9 @@ type Call interface {
 // start calling some URL out. It carries all data
 // needed to call-it operate on.
 type ConcurrentCall struct {
-	URL                url.URL // The endpoint to be tested
-	Attempts           int     // number of Attempts
-	ConcurrentAttempts int     // number of concurrent Attempts
+	URL                *url.URL // The endpoint to be tested
+	Attempts           int      // number of Attempts
+	ConcurrentAttempts int      // number of concurrent Attempts
 }
 
 // Make a call and return its results
@@ -50,7 +50,7 @@ func calcTheNumberOfConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentA
 }
 
 // This func calls an URL concurrently
-func getURL(callerURL url.URL, concurrentAttempts int) chan int {
+func getURL(callerURL *url.URL, concurrentAttempts int) chan int {
 	statusCode := make(chan int)
 	done := make(chan bool)
 
