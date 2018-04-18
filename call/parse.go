@@ -80,12 +80,10 @@ func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts int) (atte
 		return
 	}
 
-	attemptsString, concurrentErr := strconv.Atoi(args[2])
-	if err != concurrentErr {
+	attempts, err = strconv.Atoi(args[2])
+	if err != nil {
 		fmt.Println("Number of concurrent attempts. Using default: " + strconv.Itoa(int(defaultConcurrentAttempts)))
 		attempts = defaultConcurrentAttempts
-	} else {
-		attempts = attemptsString
 	}
 	return
 }
