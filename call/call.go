@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 // Represents a valid URL, including the protocol and all query strings
@@ -19,9 +20,9 @@ type Call interface {
 // start calling some URL out. It carries all data
 // needed to call-it operate on.
 type ConcurrentCall struct {
-	URL                URL // The endpoint to be tested
-	Attempts           int // number of Attempts
-	ConcurrentAttempts int // number of concurrent Attempts
+	URL                url.URL // The endpoint to be tested
+	Attempts           int     // number of Attempts
+	ConcurrentAttempts int     // number of concurrent Attempts
 }
 
 // Make a call and return its results
@@ -30,7 +31,7 @@ func (call *ConcurrentCall) MakeIt() (results map[int]int) {
 
 	for call.Attempts > 0 {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
-		statusCodeChannel := getUrl(call.URL, concurrentAttempts)
+		statusCodeChannel := getURL(call.URL, concurrentAttempts)
 		for statusCode := range statusCodeChannel {
 			results[statusCode]++
 		}
@@ -52,13 +53,13 @@ func calcTheNumberOfConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentA
 }
 
 // This func calls an URL concurrently
-func getUrl(url URL, concurrentAttempts int) chan int {
+func getURL(callerURL url.URL, concurrentAttempts int) chan int {
 	statusCode := make(chan int)
 	done := make(chan bool)
 
 	for i := 0; i < int(concurrentAttempts); i++ {
 		go func() {
-			response, err := http.Get(string(url))
+			response, err := http.Get(callerURL.String())
 			if err != nil {
 				log.Fatal("Something got wrong ", err)
 			}
