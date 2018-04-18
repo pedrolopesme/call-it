@@ -58,7 +58,7 @@ func validate(args []string) (result bool, err error) {
 
 // Tries to parse maxAttempts number. If it wasn't possible, returns
 // default attempts
-func ParseAttempts(args []string, defaultAttempts Attempts) (attempts Attempts, err error) {
+func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error) {
 	if len(args) == 1 {
 		attempts = defaultAttempts
 		return
@@ -76,7 +76,7 @@ func ParseAttempts(args []string, defaultAttempts Attempts) (attempts Attempts, 
 
 // Tries to parse the concurrent attempts number. If it wasn't possible, returns
 // default concurrent attempts
-func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts Attempts) (attempts Attempts, err error) {
+func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts int) (attempts int, err error) {
 	if len(args) <= 2 {
 		attempts = defaultConcurrentAttempts
 		return
@@ -87,7 +87,7 @@ func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts Attempts) 
 		fmt.Println("Number of concurrent attempts. Using default: " + strconv.Itoa(int(defaultConcurrentAttempts)))
 		attempts = defaultConcurrentAttempts
 	} else {
-		attempts = Attempts(attemptsString)
+		attempts = attemptsString
 	}
 	return
 }
