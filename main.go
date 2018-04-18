@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
-	"os"
-	"github.com/urfave/cli"
 	"fmt"
 	"github.com/pedrolopesme/call-it/call"
+	"github.com/urfave/cli"
+	"log"
+	"os"
 )
 
 const (
