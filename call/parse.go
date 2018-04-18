@@ -64,12 +64,10 @@ func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error)
 		return
 	}
 
-	attemptsString, attemptsErr := strconv.Atoi(args[1])
-	if err != attemptsErr {
+	attempts, err = strconv.Atoi(args[1])
+	if err != nil {
 		fmt.Println("Number of attempts invalid. Using default: " + strconv.Itoa(int(defaultAttempts)))
 		attempts = defaultAttempts
-	} else {
-		attempts = Attempts(attemptsString)
 	}
 	return
 }
