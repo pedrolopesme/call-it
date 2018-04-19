@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	DefaultAttempts        = call.Attempts(10)
-	DefaultConcurrentCalls = call.Attempts(10)
+	DefaultAttempts        = 10
+	DefaultConcurrentCalls = 10
 )
 
 func main() {
