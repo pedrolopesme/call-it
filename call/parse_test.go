@@ -43,7 +43,7 @@ func TestParseAttemptsWithoutAttempts(test *testing.T) {
 func TestParseAttemptsWithInvalidFormat(test *testing.T) {
 	params := []string{"http://www.dummy.com", "dummyAttempts"}
 	attempts, err := ParseAttempts(params, 50)
-	assert.Nil(test, err)
+	assert.NotNil(test, err)
 	assert.Equal(test, 50, attempts)
 }
 
