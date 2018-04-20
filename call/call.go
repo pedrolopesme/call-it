@@ -24,9 +24,15 @@ type ConcurrentCall struct {
 	ConcurrentAttempts int      // number of concurrent Attempts
 }
 
+// A Result contains the info to be outputted at the end
+// of the operation
+type Result struct {
+	status             map[int]int // status codes and the total of occurrences
+}
+
 // Make a call and return its results
-func (call *ConcurrentCall) MakeIt() (results map[int]int) {
-	results = make(map[int]int)
+func (call *ConcurrentCall) MakeIt() (results Result) {
+	results = Result{make(map[int]int)}
 	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
 	s.Prefix = "you "
 	s.Suffix = " " + call.URL.String()
@@ -35,7 +41,7 @@ func (call *ConcurrentCall) MakeIt() (results map[int]int) {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
 		statusCodeChannel := getURL(call.URL, concurrentAttempts)
 		for statusCode := range statusCodeChannel {
-			results[statusCode]++
+			results.status[statusCode]++
 		}
 		call.Attempts -= concurrentAttempts
 	}
