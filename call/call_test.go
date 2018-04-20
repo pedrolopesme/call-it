@@ -15,10 +15,10 @@ func TestMakeCallsWhenURLExists(test *testing.T) {
 
 	params := []string{"http://www.foo.com/bar", "10"}
 	call, _ := BuildCall(params, 1, 100)
-	results := call.MakeIt()
+	result := call.MakeIt()
 
-	assert.Equal(test, 1, len(results))
-	assert.Equal(test, 10, results[200])
+	assert.Equal(test, 1, len(result.status))
+	assert.Equal(test, 10, result.status[200])
 }
 
 func TestMakeCallsWhenURLDoesntExist(test *testing.T) {
@@ -30,11 +30,11 @@ func TestMakeCallsWhenURLDoesntExist(test *testing.T) {
 
 	params := []string{"http://www.foo.com/bar", "10"}
 	call, _ := BuildCall(params, 1, 100)
-	results := call.MakeIt()
+	result := call.MakeIt()
 
-	assert.Equal(test, 1, len(results))
-	assert.Equal(test, 0, results[200])
-	assert.Equal(test, 10, results[404])
+	assert.Equal(test, 1, len(result.status))
+	assert.Equal(test, 0, result.status[200])
+	assert.Equal(test, 10, result.status[404])
 }
 
 func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
@@ -46,8 +46,8 @@ func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
 
 	params := []string{"http://www.foo.com/bar", "100"}
 	call, _ := BuildCall(params, 1, 10)
-	results := call.MakeIt()
+	result := call.MakeIt()
 
-	assert.Equal(test, 1, len(results))
-	assert.Equal(test, 100, results[200])
+	assert.Equal(test, 1, len(result.status))
+	assert.Equal(test, 100, result.status[200])
 }
