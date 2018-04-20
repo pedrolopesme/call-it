@@ -1,10 +1,12 @@
 package call
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/briandowns/spinner"
 )
 
 // A Call should know how to execute itself, generating
@@ -25,7 +27,10 @@ type ConcurrentCall struct {
 // Make a call and return its results
 func (call *ConcurrentCall) MakeIt() (results map[int]int) {
 	results = make(map[int]int)
-
+	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
+	s.Prefix = "you "
+	s.Suffix = " " + call.URL.String()
+	s.Start()
 	for call.Attempts > 0 {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
 		statusCodeChannel := getURL(call.URL, concurrentAttempts)
@@ -34,7 +39,7 @@ func (call *ConcurrentCall) MakeIt() (results map[int]int) {
 		}
 		call.Attempts -= concurrentAttempts
 	}
-
+	s.Stop()
 	return
 }
 
@@ -60,7 +65,6 @@ func getURL(callerURL *url.URL, concurrentAttempts int) chan int {
 			if err != nil {
 				log.Fatal("Something got wrong ", err)
 			}
-			fmt.Print(" . ")
 			statusCode <- response.StatusCode
 			done <- true
 		}()
