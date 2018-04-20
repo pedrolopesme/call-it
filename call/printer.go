@@ -1,33 +1,22 @@
 package call
 
 import (
-	"fmt"
+	"os"
 	"strconv"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 // Print results formatted by Status
 func PrintResults(results map[int]int) {
-	printHeader()
+	data := [][]string{}
 	for statusCode, times := range results {
-		printLine(statusCode, times)
+		data = append(data, []string{strconv.Itoa(statusCode), strconv.Itoa(times)})
 	}
-	printFooter()
-}
-
-func printHeader() {
-	fmt.Println("+---------------------------------------------+")
-	fmt.Println("+ Status Code         | Times                 +")
-	fmt.Println("+---------------------------------------------+")
-}
-
-func printFooter() {
-	fmt.Println("+---------------------------------------------+")
-}
-
-func printLine(statusCode int, times int) {
-	fmt.Println("+ " +
-		strconv.Itoa(statusCode) +
-		"                 | " +
-		strconv.Itoa(times) +
-		"                    +")
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Status Code", "Times"})
+	for _, v := range data {
+		table.Append(v)
+	}
+	table.Render()
 }
