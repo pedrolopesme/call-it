@@ -29,16 +29,20 @@ type ConcurrentCall struct {
 type Result struct {
 	status         map[int]int // status codes and the total of occurrences
 	totalExecution float64     // total execution time
+	avgExecution float64     	// total execution time
 }
 
 // Make a call and return its results
 func (call *ConcurrentCall) MakeIt() (results Result) {
-	results = Result{make(map[int]int), 0}
+	results = Result{make(map[int]int), 0, 0}
+
 	beginning := time.Now()
 	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
 	s.Prefix = "you "
 	s.Suffix = " " + call.URL.String()
 	s.Start()
+
+	totalAttempts := call.Attempts
 	for call.Attempts > 0 {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
 		statusCodeChannel := getURL(call.URL, concurrentAttempts)
@@ -49,6 +53,7 @@ func (call *ConcurrentCall) MakeIt() (results Result) {
 	}
 	s.Stop()
 	results.totalExecution = time.Since(beginning).Seconds()
+	results.avgExecution = results.totalExecution / float64(totalAttempts)
 	return
 }
 
