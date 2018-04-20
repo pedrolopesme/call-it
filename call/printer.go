@@ -8,9 +8,9 @@ import (
 )
 
 // Print results formatted by Status
-func PrintResults(results map[int]int) {
+func PrintResults(result Result) {
 	data := [][]string{}
-	for statusCode, times := range results {
+	for statusCode, times := range result.status {
 		data = append(data, []string{strconv.Itoa(statusCode), strconv.Itoa(times)})
 	}
 	table := tablewriter.NewWriter(os.Stdout)
