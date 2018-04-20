@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
+	"fmt"
 )
 
 // Print results formatted by Status
@@ -18,6 +19,7 @@ func PrintResults(result Result) {
 	for _, v := range data {
 		table.Append(v)
 	}
-	table.SetFooter([]string{"Total Execution", strconv.FormatFloat(result.totalExecution, 'g', 1, 64) + "s" })
+	totalExecution := fmt.Sprintf("%.1f\n", result.totalExecution) + "s"
+	table.SetFooter([]string{"Total Execution", totalExecution})
 	table.Render()
 }
