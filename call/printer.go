@@ -16,10 +16,12 @@ func PrintResults(result Result) {
 	}
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Status Code", "Times"})
+	table.SetAutoFormatHeaders(false)
 	for _, v := range data {
 		table.Append(v)
 	}
 	totalExecution := fmt.Sprintf("%.1f\n", result.totalExecution) + "s"
 	table.SetFooter([]string{"Total Execution", totalExecution})
+
 	table.Render()
 }
