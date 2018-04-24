@@ -29,7 +29,7 @@ type ConcurrentCall struct {
 type Result struct {
 	status         map[int]int // status codes and the total of occurrences
 	totalExecution float64     // total execution time
-	avgExecution float64     	// total execution time
+	avgExecution   float64     // total execution time
 }
 
 // Make a call and return its results
