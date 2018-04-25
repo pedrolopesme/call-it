@@ -35,7 +35,7 @@ type Result struct {
 }
 
 // Get URL Response
-type GetUrlResponse struct {
+type StatusCodeResponse struct {
 	status    int     // status codes and the total of occurrences
 	execution float64 // total execution time
 }
@@ -89,8 +89,8 @@ func calcTheNumberOfConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentA
 }
 
 // This func calls an URL concurrently
-func getURL(callerURL *url.URL, concurrentAttempts int) chan GetUrlResponse {
-	urlResponse := make(chan GetUrlResponse)
+func getURL(callerURL *url.URL, concurrentAttempts int) chan StatusCodeResponse {
+	urlResponse := make(chan StatusCodeResponse)
 	done := make(chan bool)
 
 	for i := 0; i < int(concurrentAttempts); i++ {
@@ -101,7 +101,7 @@ func getURL(callerURL *url.URL, concurrentAttempts int) chan GetUrlResponse {
 				log.Fatal("Something got wrong ", err)
 			}
 			executionSecs := time.Since(beginning).Seconds()
-			urlResponse <- GetUrlResponse{ status: response.StatusCode, execution: executionSecs }
+			urlResponse <- StatusCodeResponse{ status: response.StatusCode, execution: executionSecs }
 			done <- true
 		}()
 	}
