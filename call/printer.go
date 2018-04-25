@@ -20,8 +20,21 @@ func PrintResults(result Result) {
 	for _, v := range data {
 		table.Append(v)
 	}
-	totalExecution := fmt.Sprintf("%.1f\n", result.totalExecution) + "s"
+	totalExecution := formatTime(result.totalExecution)
+	avgExecution := formatTime(result.avgExecution)
+	minExeuction := formatTime(result.minExecution)
+	maxExecution := formatTime(result.maxExecution)
+
+	table.Append([]string{"-------------------------", "-------------------------"})
+	table.Append([]string{"Avg", avgExecution})
+	table.Append([]string{"Min", minExeuction})
+	table.Append([]string{"Max", maxExecution})
 	table.SetFooter([]string{"Total Execution", totalExecution})
 
 	table.Render()
+}
+
+func formatTime(time float64) (output string){
+	output = fmt.Sprintf("%.2f", time) + "s"
+	return
 }
