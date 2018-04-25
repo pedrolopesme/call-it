@@ -29,12 +29,24 @@ type ConcurrentCall struct {
 type Result struct {
 	status         map[int]int // status codes and the total of occurrences
 	totalExecution float64     // total execution time
-	avgExecution   float64     // total execution time
+	avgExecution   float64     // average execution time
+	minExecution   float64     // min execution time
+	maxExecution   float64     // min execution time
+}
+
+// Get URL Response
+type GetUrlResponse struct {
+	status    int     // status codes and the total of occurrences
+	execution float64 // total execution time
 }
 
 // Make a call and return its results
-func (call *ConcurrentCall) MakeIt() (results Result) {
-	results = Result{make(map[int]int), 0, 0}
+func (call *ConcurrentCall) MakeIt() (result Result) {
+	result = Result{status: make(map[int]int),
+		totalExecution: 0,
+		avgExecution: 0,
+		minExecution: 0,
+		maxExecution: 0}
 
 	beginning := time.Now()
 	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
@@ -45,15 +57,23 @@ func (call *ConcurrentCall) MakeIt() (results Result) {
 	totalAttempts := call.Attempts
 	for call.Attempts > 0 {
 		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
-		statusCodeChannel := getURL(call.URL, concurrentAttempts)
-		for statusCode := range statusCodeChannel {
-			results.status[statusCode]++
+		responses := getURL(call.URL, concurrentAttempts)
+		for response := range responses {
+			result.status[response.status]++
+
+			if result.minExecution == 0 || result.minExecution > response.execution {
+				result.minExecution = response.execution
+			}
+
+			if result.maxExecution == 0 || result.maxExecution < response.execution {
+				result.maxExecution = response.execution
+			}
 		}
 		call.Attempts -= concurrentAttempts
 	}
 	s.Stop()
-	results.totalExecution = time.Since(beginning).Seconds()
-	results.avgExecution = results.totalExecution / float64(totalAttempts)
+	result.totalExecution = time.Since(beginning).Seconds()
+	result.avgExecution = result.totalExecution / float64(totalAttempts)
 	return
 }
 
@@ -69,17 +89,19 @@ func calcTheNumberOfConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentA
 }
 
 // This func calls an URL concurrently
-func getURL(callerURL *url.URL, concurrentAttempts int) chan int {
-	statusCode := make(chan int)
+func getURL(callerURL *url.URL, concurrentAttempts int) chan GetUrlResponse {
+	urlResponse := make(chan GetUrlResponse)
 	done := make(chan bool)
 
 	for i := 0; i < int(concurrentAttempts); i++ {
 		go func() {
+			beginning := time.Now()
 			response, err := http.Get(callerURL.String())
 			if err != nil {
 				log.Fatal("Something got wrong ", err)
 			}
-			statusCode <- response.StatusCode
+			executionSecs := time.Since(beginning).Seconds()
+			urlResponse <- GetUrlResponse{ status: response.StatusCode, execution: executionSecs }
 			done <- true
 		}()
 	}
@@ -88,8 +110,8 @@ func getURL(callerURL *url.URL, concurrentAttempts int) chan int {
 		for i := 0; i < int(concurrentAttempts); i++ {
 			<-done
 		}
-		close(statusCode)
+		close(urlResponse)
 	}()
 
-	return statusCode
+	return urlResponse
 }
