@@ -1,4 +1,4 @@
-# Call it [![Build Status](https://travis-ci.org/pedrolopesme/call-it.svg?branch=master)](https://travis-ci.org/pedrolopesme/call-it) [![Build Status](https://goreportcard.com/badge/github.com/pedrolopesme/call-it)](https://goreportcard.com/report/github.com/pedrolopesme/call-it)
+# Call it [![Build Status](https://travis-ci.org/pedrolopesme/call-it.svg?branch=master)](https://travis-ci.org/pedrolopesme/call-it) [![Build Status](https://goreportcard.com/badge/github.com/pedrolopesme/call-it)](https://goreportcard.com/report/github.com/pedrolopesme/call-it) [![Maintainability](https://api.codeclimate.com/v1/badges/e7854e559e20c9e250de/maintainability)](https://codeclimate.com/github/pedrolopesme/call-it/maintainability)
 A simple program to benchmark URL responses across multiple requests
 
 ### Makefile
