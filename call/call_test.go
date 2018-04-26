@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jarcoal/httpmock.v1"
 	"testing"
+	"net/url"
 )
 
 func TestMakeCallsWhenURLExists(test *testing.T) {
@@ -50,4 +51,25 @@ func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
 
 	assert.Equal(test, 1, len(result.status))
 	assert.Equal(test, 100, result.status[200])
+}
+
+func TestCalcConcurrentAttemptsWhenThereAreEnoughAttemptsLeft(test *testing.T) {
+	url, _ := url.Parse("http://www.a.com")
+	call := ConcurrentCall{ URL: url, Attempts:100, ConcurrentAttempts: 10 }
+
+	assert.Equal(test, 10, calcConcurrentAttempts(call))
+}
+
+func TestCalcConcurrentAttemptsWhenThereAreNotEnoughAttemptsLeft(test *testing.T) {
+	url, _ := url.Parse("http://www.a.com")
+	call := ConcurrentCall{ URL: url, Attempts:10, ConcurrentAttempts: 100 }
+
+	assert.Equal(test, 10, calcConcurrentAttempts(call))
+}
+
+func TestCalcConcurrentAttemptsWhenAttemptsLeftIsEqualToConcurrentAttempts(test *testing.T) {
+	url, _ := url.Parse("http://www.a.com")
+	call := ConcurrentCall{ URL: url, Attempts:10, ConcurrentAttempts: 10 }
+
+	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
