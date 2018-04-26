@@ -56,7 +56,7 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 
 	totalAttempts := call.Attempts
 	for call.Attempts > 0 {
-		concurrentAttempts := calcTheNumberOfConcurrentAttempts(*call)
+		concurrentAttempts := calcConcurrentAttempts(*call)
 		responses := getURL(call.URL, concurrentAttempts)
 		for response := range responses {
 			result.status[response.status]++
@@ -80,7 +80,7 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 // It calculates the amount of concurrent calls to be executed,
 // based on the attempts left. It ensures that the next round
 // of concurrent calls will respect the attempts of a given call
-func calcTheNumberOfConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int) {
+func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int) {
 	numberOfConcurrentAttempts = call.ConcurrentAttempts
 	if numberOfConcurrentAttempts > call.Attempts {
 		numberOfConcurrentAttempts = call.Attempts
