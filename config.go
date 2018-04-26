@@ -1,4 +1,4 @@
-package call
+package main
 
 // Config is the structure that defines how the user should
 // define the config.json file to make custom requests
