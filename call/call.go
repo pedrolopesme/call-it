@@ -50,7 +50,7 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 
 	beginning := time.Now()
 	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
-	s.Prefix = "you "
+	s.Prefix = "😎 "
 	s.Suffix = " " + call.URL.String()
 	s.Start()
 
