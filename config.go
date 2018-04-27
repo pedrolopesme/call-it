@@ -19,7 +19,7 @@ type Config struct {
 }
 
 func getConfig() (c []Config, err error) {
-	raw, err := ioutil.ReadFile("./callit.config")
+	raw, err := ioutil.ReadFile("./callit.json")
 	if err != nil {
 		return
 	}
