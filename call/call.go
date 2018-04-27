@@ -27,16 +27,16 @@ type ConcurrentCall struct {
 // A Result contains the info to be outputted at the end
 // of the operation
 type Result struct {
-	status         map[int]int // status codes and the total of occurrences
+	status         map[int]int // status codes
 	totalExecution float64     // total execution time
 	avgExecution   float64     // average execution time
 	minExecution   float64     // min execution time
 	maxExecution   float64     // min execution time
 }
 
-// Get URL Response
-type StatusCodeResponse struct {
-	status    int     // status codes and the total of occurrences
+// URL calls response
+type CallResponse struct {
+	status    int     // status codes
 	execution float64 // total execution time
 }
 
@@ -79,7 +79,7 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 
 // It calculates the amount of concurrent calls to be executed,
 // based on the attempts left. It ensures that the next round
-// of concurrent calls will respect the attempts of a given call
+// of concurrent calls will respect the attempts left of a given call
 func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int) {
 	numberOfConcurrentAttempts = call.ConcurrentAttempts
 	if numberOfConcurrentAttempts > call.Attempts {
@@ -88,9 +88,10 @@ func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int
 	return
 }
 
-// This func calls an URL concurrently
-func getURL(callerURL *url.URL, concurrentAttempts int) chan StatusCodeResponse {
-	urlResponse := make(chan StatusCodeResponse)
+// This func calls an URL concurrently and retuns the responses
+// as a CallResponse channel
+func getURL(callerURL *url.URL, concurrentAttempts int) chan CallResponse {
+	urlResponse := make(chan CallResponse)
 	done := make(chan bool)
 
 	for i := 0; i < int(concurrentAttempts); i++ {
@@ -101,7 +102,7 @@ func getURL(callerURL *url.URL, concurrentAttempts int) chan StatusCodeResponse 
 				log.Fatal("Something got wrong ", err)
 			}
 			executionSecs := time.Since(beginning).Seconds()
-			urlResponse <- StatusCodeResponse{ status: response.StatusCode, execution: executionSecs }
+			urlResponse <- CallResponse{ status: response.StatusCode, execution: executionSecs }
 			done <- true
 		}()
 	}
