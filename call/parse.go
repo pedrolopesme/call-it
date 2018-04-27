@@ -7,6 +7,14 @@ import (
 	"strconv"
 )
 
+var (
+	// ErrInvalidArgumentsNumber is an error when the number of arguments are invalid
+	ErrInvalidArgumentsNumber = errors.New("invalid number of arguments")
+
+	// ErrInvalidUrl is an error when the format of the url is invalid
+	ErrInvalidUrl = errors.New("invalid url format")
+)
+
 // Parses all given arguments and transform them into a ConcurrentCall
 func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call ConcurrentCall, err error) {
 	var (
@@ -24,6 +32,7 @@ func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call Conc
 	if err != nil {
 		return
 	}
+
 	attempts, err = ParseAttempts(args, maxAttempts)
 	if err != nil {
 		return
@@ -45,12 +54,12 @@ func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call Conc
 // Checks if the given parameters are valid
 func validate(args []string) (result bool, err error) {
 	if args == nil || len(args) < 1 {
-		return false, errors.New("invalidArguments")
+		return false, ErrInvalidArgumentsNumber
 	}
 
 	_, err = url.ParseRequestURI(args[0])
 	if err != nil {
-		return false, errors.New("invalidUrl ")
+		return false, ErrInvalidUrl
 	}
 
 	return true, nil
