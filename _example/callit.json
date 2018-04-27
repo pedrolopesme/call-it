@@ -1,0 +1,7 @@
+[
+    {
+        "name":"test request",
+        "method":"GET",
+        "url":"http://www.globo.com"
+    }
+]
