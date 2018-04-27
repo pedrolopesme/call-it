@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -44,9 +45,9 @@ type CallResponse struct {
 func (call *ConcurrentCall) MakeIt() (result Result) {
 	result = Result{status: make(map[int]int),
 		totalExecution: 0,
-		avgExecution: 0,
-		minExecution: 0,
-		maxExecution: 0}
+		avgExecution:   0,
+		minExecution:   0,
+		maxExecution:   0}
 
 	beginning := time.Now()
 	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
@@ -58,13 +59,11 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 	for call.Attempts > 0 {
 		concurrentAttempts := calcConcurrentAttempts(*call)
 		responses := getURL(call.URL, concurrentAttempts)
-		for response := range responses {
+		for _, response := range responses {
 			result.status[response.status]++
-
 			if result.minExecution == 0 || result.minExecution > response.execution {
 				result.minExecution = response.execution
 			}
-
 			if result.maxExecution == 0 || result.maxExecution < response.execution {
 				result.maxExecution = response.execution
 			}
@@ -88,31 +87,35 @@ func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int
 	return
 }
 
-// This func calls an URL concurrently and retuns the responses
-// as a CallResponse channel
-func getURL(callerURL *url.URL, concurrentAttempts int) chan CallResponse {
+// This func calls an URL concurrently
+func getURL(callerURL *url.URL, concurrentAttempts int) (responses []CallResponse) {
 	urlResponse := make(chan CallResponse)
-	done := make(chan bool)
-
+	var wg sync.WaitGroup
+	wg.Add(concurrentAttempts)
 	for i := 0; i < int(concurrentAttempts); i++ {
 		go func() {
+			defer wg.Done()
 			beginning := time.Now()
 			response, err := http.Get(callerURL.String())
 			if err != nil {
-				log.Fatal("Something got wrong ", err)
+				log.Fatalf("Something got wrong: %v", err)
 			}
 			executionSecs := time.Since(beginning).Seconds()
-			urlResponse <- CallResponse{ status: response.StatusCode, execution: executionSecs }
-			done <- true
+			resp := CallResponse{
+				status:    response.StatusCode,
+				execution: executionSecs,
+			}
+			urlResponse <- resp
 		}()
 	}
-
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for i := 0; i < int(concurrentAttempts); i++ {
-			<-done
+			responses = append(responses, <-urlResponse)
 		}
 		close(urlResponse)
 	}()
-
-	return urlResponse
+	wg.Wait()
+	return
 }
