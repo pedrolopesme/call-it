@@ -18,13 +18,12 @@ var (
 // Parses all given arguments and transform them into a ConcurrentCall
 func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call ConcurrentCall, err error) {
 	var (
-		callURL            *url.URL
-		attempts           int
-		concurrentAttempts int
+		callURL                      *url.URL
+		attempts, concurrentAttempts int
 	)
 
 	isValid, err := validate(args)
-	if isValid == false {
+	if !isValid {
 		return
 	}
 
