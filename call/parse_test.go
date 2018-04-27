@@ -69,3 +69,17 @@ func TestParseConcurrentCallsWithInValidFormat(test *testing.T) {
 	assert.NotNil(test, err)
 	assert.Equal(test, 100, concurrentCalls)
 }
+
+func TestArgumentsValidationWhenNoArgumentsAreSupplied(test *testing.T) {
+	params := []string{}
+	isValid, err := validate(params)
+	assert.False(test, isValid)
+	assert.Equal(test, ErrInvalidArgumentsNumber, err)
+}
+
+func TestURLValidationWhenUrlIsInvalid(test *testing.T) {
+	params := []string{"invalidurl"}
+	isValid, err := validate(params)
+	assert.False(test, isValid)
+	assert.Equal(test, ErrInvalidUrl, err)
+}
