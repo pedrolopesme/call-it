@@ -54,22 +54,22 @@ func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
 }
 
 func TestCalcConcurrentAttemptsWhenThereAreEnoughAttemptsLeft(test *testing.T) {
-	url, _ := url.Parse("http://www.a.com")
-	call := ConcurrentCall{ URL: url, Attempts:100, ConcurrentAttempts: 10 }
+	urlAddress, _ := url.Parse("http://www.a.com")
+	call := ConcurrentCall{ URL: urlAddress, Attempts:100, ConcurrentAttempts: 10 }
 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
 
 func TestCalcConcurrentAttemptsWhenThereAreNotEnoughAttemptsLeft(test *testing.T) {
-	url, _ := url.Parse("http://www.a.com")
-	call := ConcurrentCall{ URL: url, Attempts:10, ConcurrentAttempts: 100 }
+	urlAddress, _ := url.Parse("http://www.a.com")
+	call := ConcurrentCall{ URL: urlAddress, Attempts:10, ConcurrentAttempts: 100 }
 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
 
 func TestCalcConcurrentAttemptsWhenAttemptsLeftIsEqualToConcurrentAttempts(test *testing.T) {
-	url, _ := url.Parse("http://www.a.com")
-	call := ConcurrentCall{ URL: url, Attempts:10, ConcurrentAttempts: 10 }
+	urlAddress, _ := url.Parse("http://www.a.com")
+	call := ConcurrentCall{ URL: urlAddress, Attempts:10, ConcurrentAttempts: 10 }
 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
