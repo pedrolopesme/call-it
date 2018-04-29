@@ -28,28 +28,28 @@ func TestBuildCallWithInValidUrl(test *testing.T) {
 
 func TestParseAttempts(test *testing.T) {
 	params := []string{"http://www.dummy.com", "10"}
-	attempts, err := ParseAttempts(params, 50)
+	attempts, err := ParseIntArgument(params, AttemptsPosition, 50)
 	assert.Nil(test, err)
 	assert.Equal(test, 10, attempts)
 }
 
 func TestParseAttemptsWithoutAttempts(test *testing.T) {
 	params := []string{"http://www.dummy.com"}
-	attempts, err := ParseAttempts(params, 50)
+	attempts, err := ParseIntArgument(params, AttemptsPosition, 50)
 	assert.Nil(test, err)
 	assert.Equal(test, 50, attempts)
 }
 
 func TestParseAttemptsWithInvalidFormat(test *testing.T) {
 	params := []string{"http://www.dummy.com", "dummyAttempts"}
-	attempts, err := ParseAttempts(params, 50)
+	attempts, err := ParseIntArgument(params, AttemptsPosition, 50)
 	assert.NotNil(test, err)
 	assert.Equal(test, 50, attempts)
 }
 
 func TestBuildCallWithConcurrentCalls(test *testing.T) {
 	params := []string{"http://www.dummy.com", "30", "50"}
-	call, err := BuildCall(params, 100, 200)
+	call, err := BuildCall(params, 2, 100)
 	assert.Nil(test, err)
 	assert.Equal(test, params[0], call.URL.String())
 	assert.Equal(test, 30, call.Attempts)
@@ -58,14 +58,14 @@ func TestBuildCallWithConcurrentCalls(test *testing.T) {
 
 func TestParseConcurrentCallsWithoutConcurrentParameter(test *testing.T) {
 	params := []string{"http://www.dummy.com"}
-	concurrentCalls, err := ParseConcurrentAttempts(params, 100)
+	concurrentCalls, err := ParseIntArgument(params, ConcurrentAttemptsPosition, 100)
 	assert.Nil(test, err)
 	assert.Equal(test, 100, concurrentCalls)
 }
 
 func TestParseConcurrentCallsWithInValidFormat(test *testing.T) {
 	params := []string{"http://www.dummy.com", "10", "dummyConcurrentCalls"}
-	concurrentCalls, err := ParseConcurrentAttempts(params, 100)
+	concurrentCalls, err := ParseIntArgument(params, ConcurrentAttemptsPosition, 100)
 	assert.NotNil(test, err)
 	assert.Equal(test, 100, concurrentCalls)
 }
