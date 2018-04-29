@@ -75,7 +75,7 @@ func TestCalcConcurrentAttemptsWhenAttemptsLeftIsEqualToConcurrentAttempts(test 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
 
-func TestGetUrlChannel(test *testing.T) {
+func TestGetUrl(test *testing.T) {
 	urlAddress := "http://www.foo.com/bar"
 
 	httpmock.Activate()
@@ -84,12 +84,10 @@ func TestGetUrlChannel(test *testing.T) {
 		httpmock.NewStringResponder(200, `[]`))
 
 	parsedURL, _ := url.Parse(urlAddress)
-	statusCodeChannel := getURL(parsedURL, 50)
+	callResponses := getURL(parsedURL, 50)
 
-	reponsesCounter := 0
-	for response := range statusCodeChannel {
-		reponsesCounter++
+	for _, response := range callResponses {
 		assert.Equal(test, 200, response.status)
 	}
-	assert.Equal(test, 50, reponsesCounter)
+	assert.Equal(test, 50, len(callResponses))
 }
