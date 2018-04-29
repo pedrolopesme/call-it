@@ -1,10 +1,11 @@
 package call
 
 import (
+	"net/url"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/jarcoal/httpmock.v1"
-	"testing"
-	"net/url"
 )
 
 func TestMakeCallsWhenURLExists(test *testing.T) {
@@ -55,21 +56,21 @@ func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
 
 func TestCalcConcurrentAttemptsWhenThereAreEnoughAttemptsLeft(test *testing.T) {
 	urlAddress, _ := url.Parse("http://www.a.com")
-	call := ConcurrentCall{ URL: urlAddress, Attempts:100, ConcurrentAttempts: 10 }
+	call := ConcurrentCall{URL: urlAddress, Attempts: 100, ConcurrentAttempts: 10}
 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
 
 func TestCalcConcurrentAttemptsWhenThereAreNotEnoughAttemptsLeft(test *testing.T) {
 	urlAddress, _ := url.Parse("http://www.a.com")
-	call := ConcurrentCall{ URL: urlAddress, Attempts:10, ConcurrentAttempts: 100 }
+	call := ConcurrentCall{URL: urlAddress, Attempts: 10, ConcurrentAttempts: 100}
 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
 
 func TestCalcConcurrentAttemptsWhenAttemptsLeftIsEqualToConcurrentAttempts(test *testing.T) {
 	urlAddress, _ := url.Parse("http://www.a.com")
-	call := ConcurrentCall{ URL: urlAddress, Attempts:10, ConcurrentAttempts: 10 }
+	call := ConcurrentCall{URL: urlAddress, Attempts: 10, ConcurrentAttempts: 10}
 
 	assert.Equal(test, 10, calcConcurrentAttempts(call))
 }
@@ -82,8 +83,8 @@ func TestGetUrlChannel(test *testing.T) {
 	httpmock.RegisterResponder("GET", urlAddress,
 		httpmock.NewStringResponder(200, `[]`))
 
-	parsedURL, _  := url.Parse(urlAddress)
-	statusCodeChannel := getURL(parsedURL , 50)
+	parsedURL, _ := url.Parse(urlAddress)
+	statusCodeChannel := getURL(parsedURL, 50)
 
 	reponsesCounter := 0
 	for response := range statusCodeChannel {
