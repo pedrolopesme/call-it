@@ -15,6 +15,14 @@ var (
 	ErrInvalidUrl = errors.New("invalid url format")
 )
 
+const (
+	// Attempts position in Args
+	AttemptsPosition = 1
+
+	// Concurrent attempts position in Args
+	ConcurrentAttemptsPosition = 2
+)
+
 // Parses all given arguments and transform them into a ConcurrentCall
 func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call ConcurrentCall, err error) {
 	var (
@@ -32,12 +40,12 @@ func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call Conc
 		return
 	}
 
-	attempts, err = ParseAttempts(args, maxAttempts)
+	attempts, err = ParseIntArgument(args, AttemptsPosition, maxAttempts)
 	if err != nil {
 		return
 	}
 
-	concurrentAttempts, err = ParseConcurrentAttempts(args, maxConcurrentAttempts)
+	concurrentAttempts, err = ParseIntArgument(args, ConcurrentAttemptsPosition, maxConcurrentAttempts)
 	if err != nil {
 		return
 	}
@@ -64,34 +72,18 @@ func validate(args []string) (result bool, err error) {
 	return true, nil
 }
 
-// Tries to parse maxAttempts number. If it wasn't possible, returns
-// default attempts
-func ParseAttempts(args []string, defaultAttempts int) (attempts int, err error) {
-	if len(args) == 1 {
-		attempts = defaultAttempts
+// Tries to parse an int argument. If it wasn't possible, returns
+// default value
+func ParseIntArgument(args []string, position int, defaultValue int) (val int, err error) {
+	if len(args) <= position {
+		val = defaultValue
 		return
 	}
 
-	attempts, err = strconv.Atoi(args[1])
+	val, err = strconv.Atoi(args[position])
 	if err != nil {
-		fmt.Println("Number of attempts invalid. Using default: " + strconv.Itoa(int(defaultAttempts)))
-		attempts = defaultAttempts
-	}
-	return
-}
-
-// Tries to parse the concurrent attempts number. If it wasn't possible, returns
-// default concurrent attempts
-func ParseConcurrentAttempts(args []string, defaultConcurrentAttempts int) (attempts int, err error) {
-	if len(args) <= 2 {
-		attempts = defaultConcurrentAttempts
-		return
-	}
-
-	attempts, err = strconv.Atoi(args[2])
-	if err != nil {
-		fmt.Println("Number of concurrent attempts. Using default: " + strconv.Itoa(int(defaultConcurrentAttempts)))
-		attempts = defaultConcurrentAttempts
+		fmt.Println("Argument invalid. Using default: " + strconv.Itoa(int(defaultValue)))
+		val = defaultValue
 	}
 	return
 }
