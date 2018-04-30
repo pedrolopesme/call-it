@@ -28,6 +28,7 @@ type ConcurrentCall struct {
 // A Result contains the info to be outputted at the end
 // of the operation
 type Result struct {
+	URL            *url.URL    // Endpoint tested
 	status         map[int]int // status codes
 	totalExecution float64     // total execution time
 	avgExecution   float64     // average execution time
@@ -43,7 +44,9 @@ type CallResponse struct {
 
 // Make a call and return its results
 func (call *ConcurrentCall) MakeIt() (result Result) {
-	result = Result{status: make(map[int]int),
+	result = Result{
+		URL:            call.URL,
+		status:         make(map[int]int),
 		totalExecution: 0,
 		avgExecution:   0,
 		minExecution:   0,
