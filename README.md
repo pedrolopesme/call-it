@@ -29,7 +29,7 @@ This project provides a Makefile with all common operations need to develop, tes
 
 ### Running tests
 
-Tests were write using [Testify](github.com/stretchr/testify/assert). In order to run them, just type:
+Tests were write using [Testify](https://github.com/stretchr/testify/assert). In order to run them, just type:
 
 ```shell
 $ make test
