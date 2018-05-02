@@ -7,7 +7,7 @@
   <br>
 </h1>
 
-<h4 align="center">A simple program to benchmark URL responses across multiple requests</h4>
+<h4 align="center">A CLI program to benchmark URL responses across multiple requests</h4>
 
 <p align="center">
   <a href="https://travis-ci.org/pedrolopesme/call-it"> <img src="https://api.travis-ci.org/pedrolopesme/call-it.svg?branch=master" /></a>
@@ -32,7 +32,7 @@ This project provides a Makefile with all common operations need to develop, tes
 Tests were write using [Testify](github.com/stretchr/testify/assert). In order to run them, just type:
 
 ```shell
-$ npm test
+$ make test
 ```
 
 
