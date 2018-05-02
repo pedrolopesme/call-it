@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img src="call-it.pn" alt="Call It" width="200">
+  <img src="https://cdn.rawgit.com/pedrolopesme/call-it/3280fc97/call-it.png" alt="Call It" width="200">
   <br>
   Call It
   <br>
@@ -10,13 +10,12 @@
 <h4 align="center">A simple program to benchmark URL responses across multiple requests</h4>
 
 <p align="center">
-  [![Build Status](https://travis-ci.org/pedrolopesme/call-it.svg?branch=master)](https://travis-ci.org/pedrolopesme/call-it)
-  [![Build Status](https://goreportcard.com/badge/github.com/pedrolopesme/call-it)](https://goreportcard.com/report/github.com/pedrolopesme/call-it)
-  [![Maintainability](https://api.codeclimate.com/v1/badges/e7854e559e20c9e250de/maintainability)](https://codeclimate.com/github/pedrolopesme/call-it/maintainability)
+  <a href="https://travis-ci.org/pedrolopesme/call-it"> <img src="https://api.travis-ci.org/pedrolopesme/call-it.svg?branch=master" /></a>
+  <a href="https://goreportcard.com/report/github.com/pedrolopesme/call-it"> <img src="https://goreportcard.com/badge/github.com/pedrolopesme/call-it" /></a>
+  <a href="https://codeclimate.com/github/pedrolopesme/call-it/maintainability"> <img src="https://api.codeclimate.com/v1/badges/e7854e559e20c9e250de/maintainability" /></a>
 </p>
 <br>
  
-
 ### Makefile
 
 This project provides a Makefile with all common operations need to develop, test and build call-it.
