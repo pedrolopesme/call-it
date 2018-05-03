@@ -52,8 +52,10 @@ These are the main external packages that make up Call It:
 | packages | description |
 |---|---|
 | **[cli](https://github.com/urfave/cli)** | **A simple, fast, and fun package for building command line apps in Go** |
+| **[httpmock](https://github.com/jarcoal/httpmock/tree/v1)** | **HTTP mocking for Golang** |
 | **[spinner](https://github.com/briandowns/spinner)** | **Go (golang) package for providing a terminal spinner/progress indicator with options** |
 | **[tablewriter](https://github.com/olekukonko/tablewriter)** | **ASCII table in golang** |
+| **[testify](https://github.com/stretchr/testify)** | **A toolkit with common assertions and mocks that plays nicely with the standard library** |
 
 
 Call It logo was created by Flat Icons, released under Flaticon Basic License.
