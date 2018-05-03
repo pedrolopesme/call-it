@@ -20,7 +20,7 @@ func TestMakeCallsWhenURLExists(test *testing.T) {
 	result := call.MakeIt()
 
 	assert.Equal(test, 1, len(result.status))
-	assert.Equal(test, 10, result.status[200])
+	assert.Equal(test, 10, result.status[200].total)
 }
 
 func TestMakeCallsWhenURLDoesntExist(test *testing.T) {
@@ -35,8 +35,8 @@ func TestMakeCallsWhenURLDoesntExist(test *testing.T) {
 	result := call.MakeIt()
 
 	assert.Equal(test, 1, len(result.status))
-	assert.Equal(test, 0, result.status[200])
-	assert.Equal(test, 10, result.status[404])
+	assert.Equal(test, 0, result.status[200].total)
+	assert.Equal(test, 10, result.status[404].total)
 }
 
 func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
@@ -51,7 +51,7 @@ func TestMakeCallsReturnTheSameStatusCode(test *testing.T) {
 	result := call.MakeIt()
 
 	assert.Equal(test, 1, len(result.status))
-	assert.Equal(test, 100, result.status[200])
+	assert.Equal(test, 100, result.status[200].total)
 }
 
 func TestCalcConcurrentAttemptsWhenThereAreEnoughAttemptsLeft(test *testing.T) {
