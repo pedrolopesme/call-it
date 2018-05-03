@@ -81,5 +81,5 @@ func TestURLValidationWhenUrlIsInvalid(test *testing.T) {
 	params := []string{"invalidurl"}
 	isValid, err := validate(params)
 	assert.False(test, isValid)
-	assert.Equal(test, ErrInvalidUrl, err)
+	assert.Equal(test, ErrInvalidURL, err)
 }

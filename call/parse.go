@@ -11,8 +11,8 @@ var (
 	// ErrInvalidArgumentsNumber is an error when the number of arguments are invalid
 	ErrInvalidArgumentsNumber = errors.New("invalid number of arguments")
 
-	// ErrInvalidUrl is an error when the format of the url is invalid
-	ErrInvalidUrl = errors.New("invalid url format")
+	// ErrInvalidURL is an error when the format of the url is invalid
+	ErrInvalidURL = errors.New("invalid url format")
 )
 
 const (
@@ -66,7 +66,7 @@ func validate(args []string) (result bool, err error) {
 
 	_, err = url.ParseRequestURI(args[0])
 	if err != nil {
-		return false, ErrInvalidUrl
+		return false, ErrInvalidURL
 	}
 
 	return true, nil
