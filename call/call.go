@@ -29,7 +29,7 @@ type ConcurrentCall struct {
 // of the operation
 type Result struct {
 	URL            *url.URL    // Endpoint tested
-	status         map[int]int // status codes
+	status         map[int]StatusCodeBenchmark // status codes
 	totalExecution float64     // total execution time
 	avgExecution   float64     // average execution time
 	minExecution   float64     // min execution time
@@ -42,11 +42,17 @@ type HttpResponse struct {
 	execution float64 // total execution time
 }
 
+// StatusCodeBenchmark with total of occurrences, execution time
+type StatusCodeBenchmark struct {
+	total     int     // total
+	execution float64 // total execution time
+}
+
 // MakeIt executes a call and return its results
 func (call *ConcurrentCall) MakeIt() (result Result) {
 	result = Result{
 		URL:            call.URL,
-		status:         make(map[int]int),
+		status:         make(map[int]StatusCodeBenchmark),
 		totalExecution: 0,
 		avgExecution:   0,
 		minExecution:   0,
@@ -63,7 +69,10 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 		concurrentAttempts := calcConcurrentAttempts(*call)
 		responses := getURL(call.URL, concurrentAttempts)
 		for _, response := range responses {
-			result.status[response.status]++
+			statusCodeBenchmark := result.status[response.status]
+			statusCodeBenchmark.total++
+			statusCodeBenchmark.execution += response.execution
+			result.status[response.status] = statusCodeBenchmark
 			if result.minExecution == 0 || result.minExecution > response.execution {
 				result.minExecution = response.execution
 			}
