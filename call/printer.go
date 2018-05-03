@@ -12,7 +12,7 @@ import (
 // github.com/pedrolopesme/call-it/issues/6
 func PrintResults(result Result) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"URL", "STATUS", "TIMES", "ELAPSED", "AVG", "MIN", "MAX", "TOTAL AVG"})
+	table.SetHeader([]string{"URL", "STATUS", "TIMES", "AVG", "MIN", "MAX", "TOTAL AVG"})
 	table.SetAutoFormatHeaders(false)
 
 	totalExecution := formatTime(result.totalExecution)
@@ -21,19 +21,35 @@ func PrintResults(result Result) {
 	maxExecution := formatTime(result.maxExecution)
 
 	firstLine := true
-	for statusCode, times := range result.status {
+	for statusCode, benchmark := range result.status {
+
+		statusAvgExecution := formatTime(benchmark.execution / float64(benchmark.total))
+
 		if firstLine {
-			table.Append([]string{result.URL.String(), strconv.Itoa(statusCode), strconv.Itoa(times), " ", " ", minExeuction, maxExecution, avgExecution})
+			table.Append([]string{
+				result.URL.String(),
+				strconv.Itoa(statusCode),
+				strconv.Itoa(benchmark.total),
+				statusAvgExecution,
+				minExeuction,
+				maxExecution,
+				avgExecution})
 			firstLine = false
 		} else {
-			table.Append([]string{"", strconv.Itoa(statusCode), strconv.Itoa(times), " ", " ", " ", " ", " "})
+			table.Append([]string{
+				"",
+				strconv.Itoa(statusCode),
+				strconv.Itoa(benchmark.total),
+				statusAvgExecution,
+				" ",
+				" ",
+				" "})
 		}
 	}
 
-	table.SetFooter([]string{"ELAPSED " + totalExecution, "", "", "", "", "", "", " "})
+	table.SetFooter([]string{"ELAPSED " + totalExecution, "", "", "", "", "", " "})
 	table.Render()
 }
-
 
 func formatTime(time float64) (output string){
 	output = fmt.Sprintf("%.2f", time) + "s"
