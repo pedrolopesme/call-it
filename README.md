@@ -47,7 +47,17 @@ $ dep ensure
 
 ### Credits
 
+These are the main external packages that make up Call It:
+
+| packages | description |
+|---|---|
+| **[cli](https://github.com/urfave/cli)** | **A simple, fast, and fun package for building command line apps in Go** |
+| **[spinner](https://github.com/briandowns/spinner)** | **Go (golang) package for providing a terminal spinner/progress indicator with options** |
+| **[tablewriter](https://github.com/olekukonko/tablewriter)** | **ASCII table in golang** |
+
+
 Call It logo was created by Flat Icons, released under Flaticon Basic License.
+
 
 ### License
 
