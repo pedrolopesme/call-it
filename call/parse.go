@@ -16,14 +16,14 @@ var (
 )
 
 const (
-	// Attempts position in Args
+	// AttemptsPosition in Args
 	AttemptsPosition = 1
 
-	// Concurrent attempts position in Args
+	// ConcurrentAttemptsPosition in Args
 	ConcurrentAttemptsPosition = 2
 )
 
-// Parses all given arguments and transform them into a ConcurrentCall
+// BuildCall parses all given arguments and transform them into a ConcurrentCall
 func BuildCall(args []string, maxAttempts, maxConcurrentAttempts int) (call ConcurrentCall, err error) {
 	var (
 		callURL                      *url.URL
@@ -72,7 +72,7 @@ func validate(args []string) (result bool, err error) {
 	return true, nil
 }
 
-// Tries to parse an int argument. If it wasn't possible, returns
+// ParseIntArgument tries to parse an int argument. If it wasn't possible, returns
 // default value
 func ParseIntArgument(args []string, position int, defaultValue int) (val int, err error) {
 	if len(args) <= position {

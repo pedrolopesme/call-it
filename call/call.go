@@ -36,13 +36,13 @@ type Result struct {
 	maxExecution   float64     // min execution time
 }
 
-// URL calls response
+// HttpResponse status code and execution time
 type HttpResponse struct {
 	status    int     // status codes
 	execution float64 // total execution time
 }
 
-// Make a call and return its results
+// MakeIt executes a call and return its results
 func (call *ConcurrentCall) MakeIt() (result Result) {
 	result = Result{
 		URL:            call.URL,

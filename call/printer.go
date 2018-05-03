@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 
-// Print results accord to spec in
+// PrintResults output results accord to spec in
 // github.com/pedrolopesme/call-it/issues/6
 func PrintResults(result Result) {
 	table := tablewriter.NewWriter(os.Stdout)
