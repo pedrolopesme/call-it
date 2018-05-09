@@ -34,5 +34,4 @@
 out/
 
 # Ignoring vendor
-vendor/*
 _vendor*
