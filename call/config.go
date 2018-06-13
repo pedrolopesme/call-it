@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"os"
 )
 
 // Config is the structure that defines how the user should
@@ -36,23 +35,9 @@ func (c *Config) checkDefaults() (err error) {
 }
 
 func config() (c []Config, err error) {
-	dir, err := os.Open(".")
+	raw, err := ioutil.ReadFile("callit.json")
 	if err != nil {
 		return
 	}
-	files, err := dir.Readdir(0)
-	if err != nil {
-		return
-	}
-	for _, f := range files {
-		if f.Name() != "callit.json" {
-			continue
-		}
-		raw, errRaw := ioutil.ReadFile(f.Name())
-		if err != nil {
-			return c, errRaw
-		}
-		return c, json.Unmarshal(raw, &c)
-	}
-	return c, errors.New("Could not find file callit.json")
+	return c, json.Unmarshal(raw, &c)
 }
