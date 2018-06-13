@@ -87,3 +87,23 @@ func ParseIntArgument(args []string, position int, defaultValue int) (val int, e
 	}
 	return
 }
+
+// BuildCallsFromConfig parses a config file and transforms the instructions into a list of ConcurrentCalls
+func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
+	callConfig, err := config()
+	if err != nil {
+		return
+	}
+	for _, c := range callConfig {
+		if err = c.checkDefaults(); err != nil {
+			return
+		}
+		url, errP := url.ParseRequestURI(c.URL)
+		if errP != nil {
+			return nil, errP
+		}
+		newCall := ConcurrentCall{URL: url, Attempts: c.Attempts, ConcurrentAttempts: c.ConcurrentAttempts}
+		calls = append(calls, newCall)
+	}
+	return
+}
