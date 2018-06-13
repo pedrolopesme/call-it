@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_getConfig(t *testing.T) {
+func Test_config(t *testing.T) {
 	wd, err := os.Getwd()
 	if err != nil {
 		t.Error(err)
