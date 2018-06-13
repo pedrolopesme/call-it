@@ -28,12 +28,12 @@ type ConcurrentCall struct {
 // A Result contains the info to be outputted at the end
 // of the operation
 type Result struct {
-	URL            *url.URL    // Endpoint tested
+	URL            *url.URL                    // Endpoint tested
 	status         map[int]StatusCodeBenchmark // status codes
-	totalExecution float64     // total execution time
-	avgExecution   float64     // average execution time
-	minExecution   float64     // min execution time
-	maxExecution   float64     // min execution time
+	totalExecution float64                     // total execution time
+	avgExecution   float64                     // average execution time
+	minExecution   float64                     // min execution time
+	maxExecution   float64                     // min execution time
 }
 
 // HttpResponse status code and execution time
