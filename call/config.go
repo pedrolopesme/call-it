@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"net/http"
 )
 
 // Config is the structure that defines how the user should
@@ -22,6 +23,12 @@ type Config struct {
 }
 
 func (c *Config) checkDefaults() (err error) {
+	allowedMethods := map[string]string{
+		http.MethodGet:    "",
+		http.MethodPut:    "",
+		http.MethodPost:   "",
+		http.MethodDelete: "",
+	}
 	if len(c.URL) == 0 {
 		return errors.New("Cannot create call to empty url")
 	}
@@ -30,6 +37,9 @@ func (c *Config) checkDefaults() (err error) {
 	}
 	if c.ConcurrentAttempts == 0 {
 		c.ConcurrentAttempts = 10
+	}
+	if _, ok := allowedMethods[c.Method]; !ok {
+		return errors.New("Method not allowed")
 	}
 	return
 }

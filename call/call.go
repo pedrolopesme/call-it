@@ -21,6 +21,7 @@ type Call interface {
 // needed to call-it operate on.
 type ConcurrentCall struct {
 	URL                *url.URL // The endpoint to be tested
+	config             *Config  // configs from file
 	Attempts           int      // number of Attempts
 	ConcurrentAttempts int      // number of concurrent Attempts
 }

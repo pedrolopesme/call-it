@@ -102,7 +102,12 @@ func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
 		if errP != nil {
 			return nil, errP
 		}
-		newCall := ConcurrentCall{URL: url, Attempts: c.Attempts, ConcurrentAttempts: c.ConcurrentAttempts}
+		newCall := ConcurrentCall{
+			URL:                url,
+			Attempts:           c.Attempts,
+			ConcurrentAttempts: c.ConcurrentAttempts,
+			config:             &c,
+		}
 		calls = append(calls, newCall)
 	}
 	return
