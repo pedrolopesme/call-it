@@ -2,7 +2,6 @@ package call
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 )
@@ -30,7 +29,7 @@ func (c *Config) checkDefaults() (err error) {
 		http.MethodDelete: "",
 	}
 	if len(c.URL) == 0 {
-		return errors.New("Cannot create call to empty url")
+		return ErrInvalidURL
 	}
 	if c.Attempts == 0 {
 		c.Attempts = 10
@@ -39,7 +38,7 @@ func (c *Config) checkDefaults() (err error) {
 		c.ConcurrentAttempts = 10
 	}
 	if _, ok := allowedMethods[c.Method]; !ok {
-		return errors.New("Method not allowed")
+		return ErrMethodNotAllowed
 	}
 	return
 }

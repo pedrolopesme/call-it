@@ -13,6 +13,9 @@ var (
 
 	// ErrInvalidURL is an error when the format of the url is invalid
 	ErrInvalidURL = errors.New("invalid url format")
+
+	// ErrMethodNotAllowed is an error with bad config method
+	ErrMethodNotAllowed = errors.New("Method not allowed")
 )
 
 const (
