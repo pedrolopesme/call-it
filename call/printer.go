@@ -4,8 +4,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/olekukonko/tablewriter"
 	"fmt"
+
+	"github.com/olekukonko/tablewriter"
 )
 
 // PrintResults output results accord to spec in
@@ -51,7 +52,7 @@ func PrintResults(result Result) {
 	table.Render()
 }
 
-func formatTime(time float64) (output string){
+func formatTime(time float64) (output string) {
 	output = fmt.Sprintf("%.2f", time) + "s"
 	return
 }
