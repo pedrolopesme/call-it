@@ -37,8 +37,8 @@ type Result struct {
 	maxExecution   float64                     // min execution time
 }
 
-// HttpResponse status code and execution time
-type HttpResponse struct {
+// HTTPResponse status code and execution time
+type HTTPResponse struct {
 	status    int     // status codes
 	execution float64 // total execution time
 }
@@ -101,8 +101,8 @@ func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int
 }
 
 // This func calls an URL concurrently
-func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HttpResponse) {
-	urlResponse := make(chan HttpResponse)
+func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HTTPResponse) {
+	urlResponse := make(chan HTTPResponse)
 	var wg sync.WaitGroup
 	wg.Add(concurrentAttempts)
 	for i := 0; i < int(concurrentAttempts); i++ {
@@ -114,7 +114,7 @@ func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HttpRespons
 				log.Fatalf("Something got wrong: %v", err)
 			}
 			executionSecs := time.Since(beginning).Seconds()
-			resp := HttpResponse{
+			resp := HTTPResponse{
 				status:    response.StatusCode,
 				execution: executionSecs,
 			}
