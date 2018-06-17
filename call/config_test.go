@@ -82,6 +82,11 @@ func TestConfig_checkDefaults(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:    "invalid url",
+			fields:  fields{Name: "something", URL: ""},
+			wantErr: true,
+		},
+		{
 			name:    "config should pass",
 			fields:  fields{Name: "something", URL: "something", Method: http.MethodGet},
 			wantErr: false,
