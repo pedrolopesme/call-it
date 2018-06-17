@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -130,5 +132,20 @@ func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HTTPRespons
 		close(urlResponse)
 	}()
 	wg.Wait()
+	return
+}
+
+func buildRequest(baseURL string, config Config) (req *http.Request, err error) {
+	if ok := reflect.DeepEqual(config, Config{}); ok {
+		return http.NewRequest(http.MethodGet, baseURL, nil)
+	}
+	method := config.Method
+	URL := config.URL
+	body := strings.NewReader(config.Body)
+	req, err = http.NewRequest(method, URL, body)
+	if err != nil {
+		return
+	}
+	req.Header = config.Header
 	return
 }
