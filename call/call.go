@@ -70,7 +70,7 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 	totalAttempts := call.Attempts
 	for call.Attempts > 0 {
 		concurrentAttempts := calcConcurrentAttempts(*call)
-		responses := getURL(call.URL, concurrentAttempts)
+		responses := callURL(call.URL, concurrentAttempts, call.config)
 		for _, response := range responses {
 			statusCodeBenchmark := result.status[response.status]
 			statusCodeBenchmark.total++
@@ -103,7 +103,7 @@ func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int
 }
 
 // This func calls an URL concurrently
-func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HTTPResponse) {
+func callURL(callerURL *url.URL, concurrentAttempts int, config *Config) (responses []HTTPResponse) {
 	urlResponse := make(chan HTTPResponse)
 	var wg sync.WaitGroup
 	wg.Add(concurrentAttempts)

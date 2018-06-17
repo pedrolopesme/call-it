@@ -84,7 +84,7 @@ func TestGetUrl(test *testing.T) {
 		httpmock.NewStringResponder(200, `[]`))
 
 	parsedURL, _ := url.Parse(urlAddress)
-	callResponses := getURL(parsedURL, 50)
+	callResponses := callURL(parsedURL, 50)
 
 	for _, response := range callResponses {
 		assert.Equal(test, 200, response.status)
