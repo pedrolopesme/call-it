@@ -1,6 +1,7 @@
 package call
 
 import (
+	"net/http"
 	"os"
 	"reflect"
 	"testing"
@@ -48,6 +49,61 @@ func Test_config(t *testing.T) {
 				t.Errorf("config() = %v, want %v", gotC, tt.wantC)
 			}
 			os.Chdir(wd)
+		})
+	}
+}
+
+func TestConfig_checkDefaults(t *testing.T) {
+	type fields struct {
+		Name               string
+		Method             string
+		Attempts           int
+		ConcurrentAttempts int
+		URL                string
+		Body               string
+		Header             map[string][]string
+		Host               string
+		Form               string
+		PostForm           map[string][]string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name:    "config should have a name",
+			fields:  fields{},
+			wantErr: true,
+		},
+		{
+			name:    "config method not allowed",
+			fields:  fields{Name: "something", URL: "something", Method: "ASHE"},
+			wantErr: true,
+		},
+		{
+			name:    "config should pass",
+			fields:  fields{Name: "something", URL: "something", Method: http.MethodGet},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Config{
+				Name:               tt.fields.Name,
+				Method:             tt.fields.Method,
+				Attempts:           tt.fields.Attempts,
+				ConcurrentAttempts: tt.fields.ConcurrentAttempts,
+				URL:                tt.fields.URL,
+				Body:               tt.fields.Body,
+				Header:             tt.fields.Header,
+				Host:               tt.fields.Host,
+				Form:               tt.fields.Form,
+				PostForm:           tt.fields.PostForm,
+			}
+			if err := c.checkDefaults(); (err != nil) != tt.wantErr {
+				t.Errorf("Config.checkDefaults() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }
