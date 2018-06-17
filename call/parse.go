@@ -16,6 +16,9 @@ var (
 
 	// ErrMethodNotAllowed is an error with bad config method
 	ErrMethodNotAllowed = errors.New("Method not allowed")
+
+	// ErrEmptyName is an error with bad Config method
+	ErrEmptyName = errors.New("Request Config name cannot be nil")
 )
 
 const (
@@ -91,7 +94,7 @@ func ParseIntArgument(args []string, position int, defaultValue int) (val int, e
 	return
 }
 
-// BuildCallsFromConfig parses a config file and transforms the instructions into a list of ConcurrentCalls
+// BuildCallsFromConfig parses a Config file and transforms the instructions into a list of ConcurrentCalls
 func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
 	callConfig, err := config()
 	if err != nil {
@@ -109,7 +112,7 @@ func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
 			URL:                url,
 			Attempts:           c.Attempts,
 			ConcurrentAttempts: c.ConcurrentAttempts,
-			config:             &c,
+			config:             c,
 		}
 		calls = append(calls, newCall)
 	}

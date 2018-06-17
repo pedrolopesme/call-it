@@ -28,6 +28,9 @@ func (c *Config) checkDefaults() (err error) {
 		http.MethodPost:   "",
 		http.MethodDelete: "",
 	}
+	if len(c.Name) == 0 {
+		return ErrEmptyName
+	}
 	if len(c.URL) == 0 {
 		return ErrInvalidURL
 	}
