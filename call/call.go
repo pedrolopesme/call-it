@@ -23,7 +23,7 @@ type Call interface {
 // needed to call-it operate on.
 type ConcurrentCall struct {
 	URL                *url.URL // The endpoint to be tested
-	config             *Config  // configs from file
+	config             Config   // configs from file
 	Attempts           int      // number of Attempts
 	ConcurrentAttempts int      // number of concurrent Attempts
 }
@@ -103,7 +103,7 @@ func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int
 }
 
 // This func calls an URL concurrently
-func callURL(callerURL *url.URL, concurrentAttempts int, config *Config) (responses []HTTPResponse) {
+func callURL(callerURL *url.URL, concurrentAttempts int, config Config) (responses []HTTPResponse) {
 	urlResponse := make(chan HTTPResponse)
 	var wg sync.WaitGroup
 	wg.Add(concurrentAttempts)
@@ -111,7 +111,7 @@ func callURL(callerURL *url.URL, concurrentAttempts int, config *Config) (respon
 		go func() {
 			defer wg.Done()
 			beginning := time.Now()
-			req, err := buildRequest(callerURL.String(), *config)
+			req, err := buildRequest(callerURL.String(), config)
 			if err != nil {
 				log.Fatalf("Something got wrong: %v", err)
 			}
