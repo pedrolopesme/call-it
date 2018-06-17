@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 // Config is the structure that defines how the user should
@@ -31,8 +32,9 @@ func (c *Config) checkDefaults() (err error) {
 	if len(c.Name) == 0 {
 		return ErrEmptyName
 	}
-	if len(c.URL) == 0 {
-		return ErrInvalidURL
+	_, err = url.ParseRequestURI(c.URL)
+	if err != nil {
+		return
 	}
 	if c.Attempts == 0 {
 		c.Attempts = 10
