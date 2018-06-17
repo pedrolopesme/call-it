@@ -111,7 +111,12 @@ func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HTTPRespons
 		go func() {
 			defer wg.Done()
 			beginning := time.Now()
-			response, err := http.Get(callerURL.String())
+			req, err := buildRequest(callerURL.String(), *config)
+			if err != nil {
+				log.Fatalf("Something got wrong: %v", err)
+			}
+			client := http.DefaultClient
+			response, err := client.Do(req)
 			if err != nil {
 				log.Fatalf("Something got wrong: %v", err)
 			}
