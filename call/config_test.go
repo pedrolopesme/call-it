@@ -78,18 +78,23 @@ func TestConfig_checkDefaults(t *testing.T) {
 		},
 		{
 			name:    "config method not allowed",
-			fields:  fields{Name: "something", URL: "something", Method: "ASHE"},
+			fields:  fields{Name: "something", URL: "http://survivingmars.com", Method: "ASHE"},
 			wantErr: true,
 		},
 		{
 			name:    "invalid url",
-			fields:  fields{Name: "something", URL: ""},
+			fields:  fields{Name: "something", URL: "survivingmars.com"},
 			wantErr: true,
 		},
 		{
 			name:    "config should pass",
-			fields:  fields{Name: "something", URL: "something", Method: http.MethodGet},
+			fields:  fields{Name: "something", URL: "http://survivingmars.com", Method: http.MethodGet},
 			wantErr: false,
+		},
+		{
+			name:    "empty url should not pass",
+			fields:  fields{Name: "something", URL: "", Method: http.MethodGet},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
