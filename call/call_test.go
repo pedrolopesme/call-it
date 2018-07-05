@@ -1,11 +1,12 @@
 package call
 
 import (
+	"net/http"
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jarcoal/httpmock.v1"
+	httpmock "gopkg.in/jarcoal/httpmock.v1"
 )
 
 func TestMakeCallsWhenURLExists(test *testing.T) {
@@ -83,11 +84,52 @@ func TestGetUrl(test *testing.T) {
 	httpmock.RegisterResponder("GET", urlAddress,
 		httpmock.NewStringResponder(200, `[]`))
 
+	config := Config{}
 	parsedURL, _ := url.Parse(urlAddress)
-	callResponses := getURL(parsedURL, 50)
+	callResponses := callURL(parsedURL, 50, config)
 
 	for _, response := range callResponses {
 		assert.Equal(test, 200, response.status)
 	}
 	assert.Equal(test, 50, len(callResponses))
+}
+
+func Test_buildRequest(t *testing.T) {
+	type args struct {
+		baseURL string
+		config  Config
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "should pass without config",
+			args: args{
+				baseURL: "https://www.survivingmars.com",
+			},
+			wantErr: false,
+		},
+		{
+			name: "should pass with config",
+			args: args{
+				baseURL: "https://www.survivingmars.com",
+				config: Config{
+					Name:   "elon musk",
+					Method: http.MethodPost,
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := buildRequest(tt.args.baseURL, tt.args.config)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("buildRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
 }

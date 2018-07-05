@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +23,7 @@ type Call interface {
 // needed to call-it operate on.
 type ConcurrentCall struct {
 	URL                *url.URL // The endpoint to be tested
+	config             Config   // configs from file
 	Attempts           int      // number of Attempts
 	ConcurrentAttempts int      // number of concurrent Attempts
 }
@@ -28,16 +31,16 @@ type ConcurrentCall struct {
 // A Result contains the info to be outputted at the end
 // of the operation
 type Result struct {
-	URL            *url.URL    // Endpoint tested
+	URL            *url.URL                    // Endpoint tested
 	status         map[int]StatusCodeBenchmark // status codes
-	totalExecution float64     // total execution time
-	avgExecution   float64     // average execution time
-	minExecution   float64     // min execution time
-	maxExecution   float64     // min execution time
+	totalExecution float64                     // total execution time
+	avgExecution   float64                     // average execution time
+	minExecution   float64                     // min execution time
+	maxExecution   float64                     // min execution time
 }
 
-// HttpResponse status code and execution time
-type HttpResponse struct {
+// HTTPResponse status code and execution time
+type HTTPResponse struct {
 	status    int     // status codes
 	execution float64 // total execution time
 }
@@ -67,7 +70,7 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 	totalAttempts := call.Attempts
 	for call.Attempts > 0 {
 		concurrentAttempts := calcConcurrentAttempts(*call)
-		responses := getURL(call.URL, concurrentAttempts)
+		responses := callURL(call.URL, concurrentAttempts, call.config)
 		for _, response := range responses {
 			statusCodeBenchmark := result.status[response.status]
 			statusCodeBenchmark.total++
@@ -100,20 +103,25 @@ func calcConcurrentAttempts(call ConcurrentCall) (numberOfConcurrentAttempts int
 }
 
 // This func calls an URL concurrently
-func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HttpResponse) {
-	urlResponse := make(chan HttpResponse)
+func callURL(callerURL *url.URL, concurrentAttempts int, config Config) (responses []HTTPResponse) {
+	urlResponse := make(chan HTTPResponse)
 	var wg sync.WaitGroup
 	wg.Add(concurrentAttempts)
 	for i := 0; i < int(concurrentAttempts); i++ {
 		go func() {
 			defer wg.Done()
 			beginning := time.Now()
-			response, err := http.Get(callerURL.String())
+			req, err := buildRequest(callerURL.String(), config)
+			if err != nil {
+				log.Fatalf("Something got wrong: %v", err)
+			}
+			client := http.DefaultClient
+			response, err := client.Do(req)
 			if err != nil {
 				log.Fatalf("Something got wrong: %v", err)
 			}
 			executionSecs := time.Since(beginning).Seconds()
-			resp := HttpResponse{
+			resp := HTTPResponse{
 				status:    response.StatusCode,
 				execution: executionSecs,
 			}
@@ -129,5 +137,20 @@ func getURL(callerURL *url.URL, concurrentAttempts int) (responses []HttpRespons
 		close(urlResponse)
 	}()
 	wg.Wait()
+	return
+}
+
+func buildRequest(baseURL string, config Config) (req *http.Request, err error) {
+	if ok := reflect.DeepEqual(config, Config{}); ok {
+		return http.NewRequest(http.MethodGet, baseURL, nil)
+	}
+	method := config.Method
+	URL := config.URL
+	body := strings.NewReader(config.Body)
+	req, err = http.NewRequest(method, URL, body)
+	if err != nil {
+		return
+	}
+	req.Header = config.Header
 	return
 }
