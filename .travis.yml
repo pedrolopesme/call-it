@@ -6,5 +6,10 @@ go:
   - "1.10.x"
   - master
 
+install: true
+
+env:
+- GO111MODULE=on
+
 script:
   - make test
