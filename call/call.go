@@ -42,6 +42,7 @@ type Result struct {
 // HTTPResponse status code and execution time
 type HTTPResponse struct {
 	status    int     // status codes
+	err       error   // possible error
 	execution float64 // total execution time
 }
 
@@ -117,15 +118,20 @@ func callURL(callerURL *url.URL, concurrentAttempts int, config Config) (respons
 			}
 			client := http.DefaultClient
 			response, err := client.Do(req)
-			if err != nil {
-				log.Fatalf("Something got wrong: %v", err)
-			}
 			executionSecs := time.Since(beginning).Seconds()
-			resp := HTTPResponse{
-				status:    response.StatusCode,
-				execution: executionSecs,
+			if err != nil {
+				urlResponse <- HTTPResponse{
+					err:       err,
+					execution: executionSecs,
+					status:    http.StatusRequestTimeout,
+				}
+				return
 			}
-			urlResponse <- resp
+			urlResponse <- HTTPResponse{
+				err:       err,
+				execution: executionSecs,
+				status:    response.StatusCode,
+			}
 		}()
 	}
 	wg.Add(1)
