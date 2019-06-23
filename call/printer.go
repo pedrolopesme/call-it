@@ -1,10 +1,9 @@
 package call
 
 import (
+	"fmt"
 	"os"
 	"strconv"
-
-	"fmt"
 
 	"github.com/olekukonko/tablewriter"
 )
