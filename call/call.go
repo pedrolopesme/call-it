@@ -1,6 +1,7 @@
 package call
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -63,11 +64,13 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 		maxExecution:   0}
 
 	beginning := time.Now()
+	if call.config.Name != "" {
+		fmt.Println("Case: ", call.config.Name)
+	}
 	s := spinner.New(spinner.CharSets[31], 300*time.Millisecond)
 	s.Prefix = "😎 "
 	s.Suffix = " " + call.URL.String()
 	s.Start()
-
 	totalAttempts := call.Attempts
 	for call.Attempts > 0 {
 		concurrentAttempts := calcConcurrentAttempts(*call)
