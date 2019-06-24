@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+
+	"github.com/matryer/goscript"
 )
 
 var (
@@ -99,6 +101,13 @@ func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
 		if err = c.checkDefaults(); err != nil {
 			return
 		}
+		if c.Func != "" {
+			s, errF := getFuncResult(c.Func)
+			if errF != nil {
+				return calls, errF
+			}
+			c.Body = fmt.Sprintf(c.Body, s)
+		}
 		url, errP := url.ParseRequestURI(c.URL)
 		if errP != nil {
 			return nil, errP
@@ -112,4 +121,14 @@ func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
 		calls = append(calls, newCall)
 	}
 	return
+}
+
+func getFuncResult(fn string) (s string, err error) {
+	script := goscript.New(fn)
+	defer script.Close()
+	ex, err := script.Execute()
+	if err != nil {
+		return
+	}
+	return fmt.Sprintf("%v", ex), err
 }

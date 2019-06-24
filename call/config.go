@@ -11,6 +11,7 @@ import (
 // define the config.json file to make custom requests
 type Config struct {
 	Name               string              `json:"name,omitempty"`
+	Func               string              `json:"func,omitempty"`
 	Method             string              `json:"method"`
 	Attempts           int                 `json:"attempts,omitempty"`
 	ConcurrentAttempts int                 `json:"concurrent,omitempty"`
