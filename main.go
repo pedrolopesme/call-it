@@ -18,7 +18,7 @@ func main() {
 	app.Name = "Call It"
 	app.Description = "A simple program to benchmark URL responses across multiple requests"
 	app.Usage = "call-it [url] [number of attempts]"
-	app.Version = "0.0.1-beta"
+	app.Version = "1.1.0"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "c",
