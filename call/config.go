@@ -49,7 +49,7 @@ func (c *Config) checkDefaults() (err error) {
 }
 
 func config() (c []Config, err error) {
-	raw, err := ioutil.ReadFile("callit.json")
+	raw, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		return
 	}
