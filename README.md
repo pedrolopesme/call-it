@@ -16,10 +16,28 @@
 </p>
 <br>
  
-### Demo
 
-[![asciicast](https://asciinema.org/a/91xuK9qHDNSxfhY48T0TKwAlt.png)](https://asciinema.org/a/91xuK9qHDNSxfhY48T0TKwAlt) 
- 
+### Installation
+
+This project uses [go modules](https://blog.golang.org/using-go-modules)
+as package manager. You can install the source code with:
+
+```shell
+$ go get -v github.com/pedrolopesme/call-it
+```
+
+After getting the source code you can use the following command to get the dependencies:
+
+```shell
+$ go get -v ./...
+```
+
+To get the binary into your path, you can run the following inside the source code's folder:
+
+```shell
+$ go install .
+```
+
 ### Makefile
 
 This project provides a Makefile with all common operations need to develop, test and build call-it.
@@ -39,16 +57,6 @@ Tests were write using [Testify](https://github.com/stretchr/testify). In order 
 $ make test
 ```
 
-
-### Building
-
-This project uses [DEP](https://golang.github.io/dep/docs/installation.html)
-as package manager. After installed, you'll need to:
-
-```shell
-$ dep ensure
-```
-
 ### Credits
 
 These are the main external packages that make up Call It:
@@ -60,6 +68,7 @@ These are the main external packages that make up Call It:
 | **[spinner](https://github.com/briandowns/spinner)** | **Go (golang) package for providing a terminal spinner/progress indicator with options** |
 | **[tablewriter](https://github.com/olekukonko/tablewriter)** | **ASCII table in golang** |
 | **[testify](https://github.com/stretchr/testify)** | **A toolkit with common assertions and mocks that plays nicely with the standard library** |
+| **[goscritp](github.com/matryer/goscript)** | **Goscript: Runtime execution of Go code.** |
 
 
 Call It logo was created by Flat Icons, released under Flaticon Basic License.
