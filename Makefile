@@ -55,7 +55,7 @@ build: ## Build the application
 	@mkdir -p $(BUILD_DIR)
 	@echo "  $(BLUE)→$(NC) Version: $(VERSION)"
 	@echo "  $(BLUE)→$(NC) Build time: $(BUILD_TIME)"
-	@$(GOBUILD) -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME)" -o $(BINARY_PATH) -v
+	@$(GOBUILD) -ldflags "-X github.com/pedrolopesme/call-it/internal/version.Version=$(VERSION) -X github.com/pedrolopesme/call-it/internal/version.BuildTime=$(BUILD_TIME)" -o $(BINARY_PATH) -v ./cmd/call-it
 	@echo "$(GREEN)✅ Build complete!$(NC) Binary: $(BINARY_PATH)"
 
 test: ## Run all tests

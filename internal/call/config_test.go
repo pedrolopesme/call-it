@@ -25,7 +25,7 @@ func Test_config(t *testing.T) {
 		{
 			name:    "should read file",
 			wantErr: false,
-			twd:     "../_example",
+			twd:     "../../examples",
 			wantC: []Config{
 				Config{
 					Name:   "test request",
