@@ -75,10 +75,16 @@ func TestModelNavigation(t *testing.T) {
 			expectedFocus:  func(m Model) bool { return m.concurrentInput.Focused() },
 		},
 		{
-			name:           "Tab to method selector",
+			name:           "Tab to headers input",
 			key:            "tab",
 			expectedActive: 3,
-			expectedFocus:  func(m Model) bool { return !m.urlInput.Focused() && !m.attemptsInput.Focused() && !m.concurrentInput.Focused() },
+			expectedFocus:  func(m Model) bool { return m.headersInput.Focused() },
+		},
+		{
+			name:           "Tab to method selector",
+			key:            "tab",
+			expectedActive: 4,
+			expectedFocus:  func(m Model) bool { return !m.urlInput.Focused() && !m.attemptsInput.Focused() && !m.concurrentInput.Focused() && !m.headersInput.Focused() },
 		},
 		{
 			name:           "Tab back to URL input",
@@ -113,13 +119,13 @@ func TestMethodSelection(t *testing.T) {
 	model := NewModel()
 	
 	// Navigate to method selector
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 4; i++ {
 		keyMsg := tea.KeyMsg{Type: tea.KeyTab}
 		newModel, _ := model.Update(keyMsg)
 		model = newModel.(Model)
 	}
 
-	if model.activeInput != 3 {
+	if model.activeInput != 4 {
 		t.Fatalf("Expected to be on method selector, got active input %d", model.activeInput)
 	}
 
@@ -495,11 +501,15 @@ func TestDefaultValues(t *testing.T) {
 	if model.concurrentInput.Placeholder != "3" {
 		t.Error("Concurrent input should have '3' placeholder")
 	}
+	
+	if !strings.Contains(model.headersInput.Placeholder, "Content-Type:application/json") {
+		t.Error("Headers input should have example headers placeholder")
+	}
 }
 
 func TestMethodSelectorBounds(t *testing.T) {
 	model := NewModel()
-	model.activeInput = 3 // Method selector
+	model.activeInput = 4 // Method selector
 	
 	// Test cycling through all methods
 	originalMethod := model.selectedMethod
@@ -524,5 +534,87 @@ func TestMethodSelectorBounds(t *testing.T) {
 	expectedMethod := (originalMethod - 1 + len(model.httpMethods)) % len(model.httpMethods)
 	if model.selectedMethod != expectedMethod {
 		t.Errorf("Expected method %d, got %d", expectedMethod, model.selectedMethod)
+	}
+}
+
+func TestHeadersParsing(t *testing.T) {
+	tests := []struct {
+		name          string
+		headersInput  string
+		expectedError string
+	}{
+		{
+			name:          "Valid headers",
+			headersInput:  "Content-Type:application/json,Authorization:Bearer token123",
+			expectedError: "",
+		},
+		{
+			name:          "Single header",
+			headersInput:  "Accept:application/xml",
+			expectedError: "",
+		},
+		{
+			name:          "Headers with spaces",
+			headersInput:  "Content-Type: application/json, Authorization: Bearer token",
+			expectedError: "",
+		},
+		{
+			name:          "Empty headers",
+			headersInput:  "",
+			expectedError: "",
+		},
+		{
+			name:          "Invalid header format (no colon)",
+			headersInput:  "ContentType application/json",
+			expectedError: "",  // Should just skip invalid headers
+		},
+		{
+			name:          "Mixed valid and invalid",
+			headersInput:  "Content-Type:application/json,InvalidHeader,Accept:text/plain",
+			expectedError: "",  // Should parse valid ones and skip invalid
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := NewModel()
+			model.selectedMethod = 0 // GET
+
+			// Set valid input values
+			model.urlInput.SetValue("https://example.com")
+			model.attemptsInput.SetValue("5")
+			model.concurrentInput.SetValue("3")
+			model.headersInput.SetValue(tt.headersInput)
+
+			// Trigger startCall
+			newModel, _ := model.startCall()
+
+			if tt.expectedError == "" && newModel.error != "" {
+				t.Errorf("Expected no error, got: %s", newModel.error)
+			}
+
+			if tt.expectedError != "" && newModel.error != tt.expectedError {
+				t.Errorf("Expected error '%s', got '%s'", tt.expectedError, newModel.error)
+			}
+		})
+	}
+}
+
+func TestHeadersNavigation(t *testing.T) {
+	model := NewModel()
+	
+	// Navigate to headers input
+	for i := 0; i < 3; i++ {
+		keyMsg := tea.KeyMsg{Type: tea.KeyTab}
+		newModel, _ := model.Update(keyMsg)
+		model = newModel.(Model)
+	}
+	
+	if model.activeInput != 3 {
+		t.Fatalf("Expected to be on headers input, got active input %d", model.activeInput)
+	}
+	
+	if !model.headersInput.Focused() {
+		t.Error("Headers input should be focused when active")
 	}
 }

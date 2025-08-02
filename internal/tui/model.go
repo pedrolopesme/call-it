@@ -30,6 +30,7 @@ type Model struct {
 	urlInput     textinput.Model
 	attemptsInput textinput.Model
 	concurrentInput textinput.Model
+	headersInput textinput.Model
 	httpMethods  []string
 	selectedMethod int
 	activeInput  int
@@ -65,6 +66,11 @@ func NewModel() Model {
 	concurrentInput.CharLimit = 10
 	concurrentInput.Width = 20
 
+	headersInput := textinput.New()
+	headersInput.Placeholder = "Content-Type:application/json,Authorization:Bearer token"
+	headersInput.CharLimit = 512
+	headersInput.Width = 60
+
 	// Initialize spinner
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -75,6 +81,7 @@ func NewModel() Model {
 		urlInput:        urlInput,
 		attemptsInput:   attemptsInput,
 		concurrentInput: concurrentInput,
+		headersInput:    headersInput,
 		httpMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "TRACE", "CONNECT", "PATCH"},
 		selectedMethod:  0, // Default to GET
 		activeInput:     0,
@@ -166,17 +173,18 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c":
 		return m, tea.Quit
 	case "tab", "shift+tab", "up", "down":
-		// Switch between inputs (4 total: URL, attempts, concurrent, method)
+		// Switch between inputs (5 total: URL, attempts, concurrent, headers, method)
 		if msg.String() == "tab" || msg.String() == "down" {
-			m.activeInput = (m.activeInput + 1) % 4
+			m.activeInput = (m.activeInput + 1) % 5
 		} else {
-			m.activeInput = (m.activeInput - 1 + 4) % 4
+			m.activeInput = (m.activeInput - 1 + 5) % 5
 		}
 		
 		// Update focus
 		m.urlInput.Blur()
 		m.attemptsInput.Blur()
 		m.concurrentInput.Blur()
+		m.headersInput.Blur()
 		
 		switch m.activeInput {
 		case 0:
@@ -186,13 +194,15 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case 2:
 			m.concurrentInput.Focus()
 		case 3:
+			m.headersInput.Focus()
+		case 4:
 			// HTTP method selector - no focus needed
 		}
 		
 		return m, textinput.Blink
 	case "left", "right":
 		// Handle HTTP method selection when active
-		if m.activeInput == 3 {
+		if m.activeInput == 4 {
 			if msg.String() == "right" {
 				m.selectedMethod = (m.selectedMethod + 1) % len(m.httpMethods)
 			} else {
@@ -212,6 +222,8 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case 2:
 			m.concurrentInput, cmd = m.concurrentInput.Update(msg)
 		case 3:
+			m.headersInput, cmd = m.headersInput.Update(msg)
+		case 4:
 			// Method selector doesn't need text input
 		}
 		cmds = append(cmds, cmd)
@@ -254,13 +266,31 @@ func (m Model) startCall() (Model, tea.Cmd) {
 		return m, nil
 	}
 	
-	// Build call configuration with HTTP method
+	// Parse headers
+	headers := make(map[string][]string)
+	headersStr := strings.TrimSpace(m.headersInput.Value())
+	if headersStr != "" {
+		headerPairs := strings.Split(headersStr, ",")
+		for _, pair := range headerPairs {
+			parts := strings.SplitN(strings.TrimSpace(pair), ":", 2)
+			if len(parts) == 2 {
+				key := strings.TrimSpace(parts[0])
+				value := strings.TrimSpace(parts[1])
+				if key != "" && value != "" {
+					headers[key] = []string{value}
+				}
+			}
+		}
+	}
+	
+	// Build call configuration with HTTP method and headers
 	config := call.Config{
 		Name:               "TUI Request",
 		Method:             m.httpMethods[m.selectedMethod],
 		URL:                urlString,
 		Attempts:           attempts,
 		ConcurrentAttempts: concurrent,
+		Header:             headers,
 	}
 	
 	// Validate the config
@@ -383,9 +413,21 @@ func (m Model) renderInputView() string {
 	b.WriteString(m.concurrentInput.View())
 	b.WriteString("\n\n")
 	
+	// Headers Input
+	headersLabel := "HTTP Headers (key:value,key:value):"
+	if m.activeInput == 3 {
+		headersLabel = "► " + headersLabel
+		b.WriteString(focusedLabelStyle.Render(headersLabel))
+	} else {
+		b.WriteString(labelStyle.Render(headersLabel))
+	}
+	b.WriteString("\n")
+	b.WriteString(m.headersInput.View())
+	b.WriteString("\n\n")
+	
 	// HTTP Method Selector
 	methodLabel := "HTTP Method:"
-	if m.activeInput == 3 {
+	if m.activeInput == 4 {
 		methodLabel = "► " + methodLabel
 		b.WriteString(focusedLabelStyle.Render(methodLabel))
 	} else {
@@ -516,7 +558,7 @@ func (m Model) renderMethodSelector() string {
 	for i, method := range m.httpMethods {
 		if i == m.selectedMethod {
 			// Highlight selected method
-			if m.activeInput == 3 {
+			if m.activeInput == 4 {
 				// Active and selected
 				methods = append(methods, activeButtonStyle.Render(method))
 			} else {
