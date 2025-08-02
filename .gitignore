@@ -36,3 +36,5 @@ out/
 # Ignoring vendor
 _vendor*
 call-it
+coverage.html
+test_tui.sh

@@ -95,6 +95,41 @@ func (call *ConcurrentCall) MakeIt() (result Result) {
 	return
 }
 
+// GetStatus returns the status codes map for external access
+func (r *Result) GetStatus() map[int]StatusCodeBenchmark {
+	return r.status
+}
+
+// GetTotalExecution returns the total execution time
+func (r *Result) GetTotalExecution() float64 {
+	return r.totalExecution
+}
+
+// GetAvgExecution returns the average execution time
+func (r *Result) GetAvgExecution() float64 {
+	return r.avgExecution
+}
+
+// GetMinExecution returns the minimum execution time
+func (r *Result) GetMinExecution() float64 {
+	return r.minExecution
+}
+
+// GetMaxExecution returns the maximum execution time
+func (r *Result) GetMaxExecution() float64 {
+	return r.maxExecution
+}
+
+// GetTotal returns the total count for a status code benchmark
+func (s *StatusCodeBenchmark) GetTotal() int {
+	return s.total
+}
+
+// GetExecution returns the execution time for a status code benchmark
+func (s *StatusCodeBenchmark) GetExecution() float64 {
+	return s.execution
+}
+
 // It calculates the amount of concurrent calls to be executed,
 // based on the attempts left. It ensures that the next round
 // of concurrent calls will respect the attempts left of a given call

@@ -1,13 +1,13 @@
 <h1 align="center">
   <br>
-  <img src="https://cdn.rawgit.com/pedrolopesme/call-it/3280fc97/call-it.png" alt="Call It" width="200">
+  <img src="assets/call-it.png" alt="Call It" width="200">
   <br>
   Call It
   <br>
   <br>
 </h1>
 
-<h4 align="center">A CLI program to benchmark URL responses across multiple requests</h4>
+<h4 align="center">🎨 Modern TUI for HTTP load testing with beautiful visualizations</h4>
 
 <p align="center">
   <a href="https://travis-ci.org/pedrolopesme/call-it"> <img src="https://api.travis-ci.org/pedrolopesme/call-it.svg?branch=master" /></a>
