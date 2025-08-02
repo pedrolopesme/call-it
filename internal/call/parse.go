@@ -98,7 +98,7 @@ func BuildCallsFromConfig() (calls []ConcurrentCall, err error) {
 		return
 	}
 	for _, c := range callConfig {
-		if err = c.checkDefaults(); err != nil {
+		if err = c.CheckDefaults(); err != nil {
 			return
 		}
 		if c.Func != "" {

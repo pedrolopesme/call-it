@@ -111,8 +111,8 @@ func TestConfig_checkDefaults(t *testing.T) {
 				Form:               tt.fields.Form,
 				PostForm:           tt.fields.PostForm,
 			}
-			if err := c.checkDefaults(); (err != nil) != tt.wantErr {
-				t.Errorf("Config.checkDefaults() error = %v, wantErr %v", err, tt.wantErr)
+			if err := c.CheckDefaults(); (err != nil) != tt.wantErr {
+				t.Errorf("Config.CheckDefaults() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

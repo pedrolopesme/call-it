@@ -130,6 +130,11 @@ func (s *StatusCodeBenchmark) GetExecution() float64 {
 	return s.execution
 }
 
+// SetConfig sets the configuration for the ConcurrentCall
+func (c *ConcurrentCall) SetConfig(config Config) {
+	c.config = config
+}
+
 // It calculates the amount of concurrent calls to be executed,
 // based on the attempts left. It ensures that the next round
 // of concurrent calls will respect the attempts left of a given call

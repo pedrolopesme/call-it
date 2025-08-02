@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +30,8 @@ type Model struct {
 	urlInput     textinput.Model
 	attemptsInput textinput.Model
 	concurrentInput textinput.Model
+	httpMethods  []string
+	selectedMethod int
 	activeInput  int
 	spinner      spinner.Model
 	results      *call.Result
@@ -72,6 +75,8 @@ func NewModel() Model {
 		urlInput:        urlInput,
 		attemptsInput:   attemptsInput,
 		concurrentInput: concurrentInput,
+		httpMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "TRACE", "CONNECT", "PATCH"},
+		selectedMethod:  0, // Default to GET
 		activeInput:     0,
 		spinner:         s,
 	}
@@ -161,11 +166,11 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c":
 		return m, tea.Quit
 	case "tab", "shift+tab", "up", "down":
-		// Switch between inputs
+		// Switch between inputs (4 total: URL, attempts, concurrent, method)
 		if msg.String() == "tab" || msg.String() == "down" {
-			m.activeInput = (m.activeInput + 1) % 3
+			m.activeInput = (m.activeInput + 1) % 4
 		} else {
-			m.activeInput = (m.activeInput - 1 + 3) % 3
+			m.activeInput = (m.activeInput - 1 + 4) % 4
 		}
 		
 		// Update focus
@@ -180,14 +185,25 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.attemptsInput.Focus()
 		case 2:
 			m.concurrentInput.Focus()
+		case 3:
+			// HTTP method selector - no focus needed
 		}
 		
 		return m, textinput.Blink
+	case "left", "right":
+		// Handle HTTP method selection when active
+		if m.activeInput == 3 {
+			if msg.String() == "right" {
+				m.selectedMethod = (m.selectedMethod + 1) % len(m.httpMethods)
+			} else {
+				m.selectedMethod = (m.selectedMethod - 1 + len(m.httpMethods)) % len(m.httpMethods)
+			}
+		}
 	case "enter":
 		// Start the call
 		return m.startCall()
 	default:
-		// Pass all other key messages to the active input
+		// Pass all other key messages to the active input (not method selector)
 		switch m.activeInput {
 		case 0:
 			m.urlInput, cmd = m.urlInput.Update(msg)
@@ -195,6 +211,8 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.attemptsInput, cmd = m.attemptsInput.Update(msg)
 		case 2:
 			m.concurrentInput, cmd = m.concurrentInput.Update(msg)
+		case 3:
+			// Method selector doesn't need text input
 		}
 		cmds = append(cmds, cmd)
 	}
@@ -208,8 +226,8 @@ func (m Model) startCall() (Model, tea.Cmd) {
 	m.error = ""
 	
 	// Validate URL
-	url := strings.TrimSpace(m.urlInput.Value())
-	if url == "" {
+	urlString := strings.TrimSpace(m.urlInput.Value())
+	if urlString == "" {
 		m.error = "URL is required"
 		return m, nil
 	}
@@ -236,14 +254,36 @@ func (m Model) startCall() (Model, tea.Cmd) {
 		return m, nil
 	}
 	
-	// Build call configuration
-	args := []string{url}
-	callConfig, err := call.BuildCall(args, attempts, concurrent)
+	// Build call configuration with HTTP method
+	config := call.Config{
+		Name:               "TUI Request",
+		Method:             m.httpMethods[m.selectedMethod],
+		URL:                urlString,
+		Attempts:           attempts,
+		ConcurrentAttempts: concurrent,
+	}
+	
+	// Validate the config
+	if err := config.CheckDefaults(); err != nil {
+		m.error = err.Error()
+		return m, nil
+	}
+	
+	// Create ConcurrentCall with config
+	parsedURL, err := url.Parse(urlString)
 	if err != nil {
 		m.error = err.Error()
 		return m, nil
 	}
 	
+	callConfig := call.ConcurrentCall{
+		URL:                parsedURL,
+		Attempts:           attempts,
+		ConcurrentAttempts: concurrent,
+	}
+	
+	// Set the config using the public setter method
+	callConfig.SetConfig(config)
 	m.callConfig = &callConfig
 	
 	return m, func() tea.Msg {
@@ -343,6 +383,18 @@ func (m Model) renderInputView() string {
 	b.WriteString(m.concurrentInput.View())
 	b.WriteString("\n\n")
 	
+	// HTTP Method Selector
+	methodLabel := "HTTP Method:"
+	if m.activeInput == 3 {
+		methodLabel = "► " + methodLabel
+		b.WriteString(focusedLabelStyle.Render(methodLabel))
+	} else {
+		b.WriteString(labelStyle.Render(methodLabel))
+	}
+	b.WriteString("\n")
+	b.WriteString(m.renderMethodSelector())
+	b.WriteString("\n\n")
+	
 	// Error message
 	if m.error != "" {
 		b.WriteString(StatusMessage(m.error, "error"))
@@ -350,7 +402,8 @@ func (m Model) renderInputView() string {
 	}
 	
 	// Instructions
-	b.WriteString(helpStyle.Render("Press Tab to navigate • Enter to start • Ctrl+C to quit"))
+	instructions := "Press Tab to navigate • Left/Right for method • Enter to start • Ctrl+C to quit"
+	b.WriteString(helpStyle.Render(instructions))
 	
 	return baseStyle.Render(b.String())
 }
@@ -382,9 +435,10 @@ func (m Model) renderResultsView() string {
 	b.WriteString(titleStyle.Render("📊 Results"))
 	b.WriteString("\n\n")
 	
-	// Execution time
+	// Execution time and method
 	duration := m.endTime.Sub(m.startTime)
-	b.WriteString(StatusMessage(fmt.Sprintf("Completed in %v", duration), "success"))
+	method := m.httpMethods[m.selectedMethod]
+	b.WriteString(StatusMessage(fmt.Sprintf("Completed %s request in %v", method, duration), "success"))
 	b.WriteString("\n\n")
 	
 	// Results table
@@ -453,4 +507,31 @@ func (m Model) formatResults() string {
 	}
 	
 	return b.String()
+}
+
+// renderMethodSelector renders the HTTP method selector
+func (m Model) renderMethodSelector() string {
+	var methods []string
+	
+	for i, method := range m.httpMethods {
+		if i == m.selectedMethod {
+			// Highlight selected method
+			if m.activeInput == 3 {
+				// Active and selected
+				methods = append(methods, activeButtonStyle.Render(method))
+			} else {
+				// Selected but not active
+				methods = append(methods, buttonStyle.Render(method))
+			}
+		} else {
+			// Not selected
+			methodStyle := lipgloss.NewStyle().
+				Foreground(mutedColor).
+				Padding(0, 1).
+				Margin(0, 1)
+			methods = append(methods, methodStyle.Render(method))
+		}
+	}
+	
+	return lipgloss.JoinHorizontal(lipgloss.Left, methods...)
 }

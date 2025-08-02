@@ -23,12 +23,17 @@ type Config struct {
 	PostForm           map[string][]string `json:"postform,omitempty"`
 }
 
-func (c *Config) checkDefaults() (err error) {
+func (c *Config) CheckDefaults() (err error) {
 	allowedMethods := map[string]string{
-		http.MethodGet:    "",
-		http.MethodPut:    "",
-		http.MethodPost:   "",
-		http.MethodDelete: "",
+		http.MethodGet:     "",
+		http.MethodPost:    "",
+		http.MethodPut:     "",
+		http.MethodDelete:  "",
+		http.MethodOptions: "",
+		http.MethodHead:    "",
+		http.MethodTrace:   "",
+		http.MethodConnect: "",
+		http.MethodPatch:   "",
 	}
 	if len(c.Name) == 0 {
 		return ErrEmptyName
