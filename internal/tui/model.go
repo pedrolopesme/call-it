@@ -31,6 +31,7 @@ type Model struct {
 	attemptsInput textinput.Model
 	concurrentInput textinput.Model
 	headersInput textinput.Model
+	bodyInput    textinput.Model
 	httpMethods  []string
 	selectedMethod int
 	activeInput  int
@@ -72,6 +73,11 @@ func NewModel() Model {
 	headersInput.CharLimit = 512
 	headersInput.Width = 60
 
+	bodyInput := textinput.New()
+	bodyInput.Placeholder = `{"key": "value", "message": "Hello World"}`
+	bodyInput.CharLimit = 1024
+	bodyInput.Width = 60
+
 	// Initialize spinner
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -83,6 +89,7 @@ func NewModel() Model {
 		attemptsInput:   attemptsInput,
 		concurrentInput: concurrentInput,
 		headersInput:    headersInput,
+		bodyInput:       bodyInput,
 		httpMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "TRACE", "CONNECT", "PATCH"},
 		selectedMethod:  0, // Default to GET
 		activeInput:     0,
@@ -194,11 +201,29 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+c":
 		return m, tea.Quit
 	case "tab", "shift+tab", "up", "down":
-		// Switch between inputs (5 total: URL, attempts, concurrent, headers, method)
+		// Switch between inputs, skipping body input if method doesn't support it
 		if msg.String() == "tab" || msg.String() == "down" {
-			m.activeInput = (m.activeInput + 1) % 5
+			m.activeInput++
+			// Skip body input (index 5) if method doesn't support body
+			if m.activeInput == 5 && !m.methodSupportsBody() {
+				m.activeInput = 0 // Wrap around to beginning
+			} else {
+				m.activeInput = m.activeInput % 6
+			}
 		} else {
-			m.activeInput = (m.activeInput - 1 + 5) % 5
+			m.activeInput--
+			if m.activeInput < 0 {
+				// Go to body if supported, otherwise method selector
+				if m.methodSupportsBody() {
+					m.activeInput = 5
+				} else {
+					m.activeInput = 4
+				}
+			}
+			// Skip body input (index 5) if method doesn't support body when going backwards
+			if m.activeInput == 5 && !m.methodSupportsBody() {
+				m.activeInput = 4
+			}
 		}
 		
 		// Update focus
@@ -206,6 +231,7 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.attemptsInput.Blur()
 		m.concurrentInput.Blur()
 		m.headersInput.Blur()
+		m.bodyInput.Blur()
 		
 		switch m.activeInput {
 		case 0:
@@ -218,6 +244,8 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.headersInput.Focus()
 		case 4:
 			// HTTP method selector - no focus needed
+		case 5:
+			m.bodyInput.Focus()
 		}
 		
 		return m, textinput.Blink
@@ -246,6 +274,8 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.headersInput, cmd = m.headersInput.Update(msg)
 		case 4:
 			// Method selector doesn't need text input
+		case 5:
+			m.bodyInput, cmd = m.bodyInput.Update(msg)
 		}
 		cmds = append(cmds, cmd)
 	}
@@ -304,7 +334,13 @@ func (m Model) startCall() (Model, tea.Cmd) {
 		}
 	}
 	
-	// Build call configuration with HTTP method and headers
+	// Parse body (only for methods that support it)
+	var body string
+	if m.methodSupportsBody() {
+		body = strings.TrimSpace(m.bodyInput.Value())
+	}
+	
+	// Build call configuration with HTTP method, headers, and body
 	config := call.Config{
 		Name:               "TUI Request",
 		Method:             m.httpMethods[m.selectedMethod],
@@ -312,6 +348,7 @@ func (m Model) startCall() (Model, tea.Cmd) {
 		Attempts:           attempts,
 		ConcurrentAttempts: concurrent,
 		Header:             headers,
+		Body:               body,
 	}
 	
 	// Validate the config
@@ -476,6 +513,20 @@ func (m Model) renderInputView() string {
 	b.WriteString(m.renderMethodSelector())
 	b.WriteString("\n\n")
 	
+	// Body Input (only show for methods that support body)
+	if m.methodSupportsBody() {
+		bodyLabel := "Request Body (JSON, XML, text):"
+		if m.activeInput == 5 {
+			bodyLabel = "► " + bodyLabel
+			b.WriteString(focusedLabelStyle.Render(bodyLabel))
+		} else {
+			b.WriteString(labelStyle.Render(bodyLabel))
+		}
+		b.WriteString("\n")
+		b.WriteString(m.bodyInput.View())
+		b.WriteString("\n\n")
+	}
+	
 	// Error message
 	if m.error != "" {
 		b.WriteString(StatusMessage(m.error, "error"))
@@ -588,6 +639,17 @@ func (m Model) formatResults() string {
 	}
 	
 	return b.String()
+}
+
+// methodSupportsBody returns true if the HTTP method supports request body
+func (m Model) methodSupportsBody() bool {
+	method := m.httpMethods[m.selectedMethod]
+	switch method {
+	case "POST", "PUT", "PATCH", "DELETE":
+		return true
+	default:
+		return false
+	}
 }
 
 // renderMethodSelector renders the HTTP method selector

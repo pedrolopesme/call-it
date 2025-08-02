@@ -84,10 +84,10 @@ func TestModelNavigation(t *testing.T) {
 			name:           "Tab to method selector",
 			key:            "tab",
 			expectedActive: 4,
-			expectedFocus:  func(m Model) bool { return !m.urlInput.Focused() && !m.attemptsInput.Focused() && !m.concurrentInput.Focused() && !m.headersInput.Focused() },
+			expectedFocus:  func(m Model) bool { return !m.urlInput.Focused() && !m.attemptsInput.Focused() && !m.concurrentInput.Focused() && !m.headersInput.Focused() && !m.bodyInput.Focused() },
 		},
 		{
-			name:           "Tab back to URL input",
+			name:           "Tab wraps to URL (GET method skips body)",
 			key:            "tab",
 			expectedActive: 0,
 			expectedFocus:  func(m Model) bool { return m.urlInput.Focused() },
@@ -334,7 +334,7 @@ func TestRenderMethodSelector(t *testing.T) {
 	}
 
 	// Test with method selector active
-	model.activeInput = 3
+	model.activeInput = 4
 	selectorActive := model.renderMethodSelector()
 	
 	if selectorActive == "" {
@@ -600,6 +600,37 @@ func TestHeadersParsing(t *testing.T) {
 	}
 }
 
+func TestBodyInputNavigation(t *testing.T) {
+	model := NewModel()
+	
+	// Change to POST method to enable body input
+	model.selectedMethod = 1 // POST
+	
+	// Navigate to method selector first
+	for i := 0; i < 4; i++ {
+		keyMsg := tea.KeyMsg{Type: tea.KeyTab}
+		newModel, _ := model.Update(keyMsg)
+		model = newModel.(Model)
+	}
+	
+	if model.activeInput != 4 {
+		t.Fatalf("Expected to be on method selector, got active input %d", model.activeInput)
+	}
+	
+	// Tab to body input (should work with POST method)
+	keyMsg := tea.KeyMsg{Type: tea.KeyTab}
+	newModel, _ := model.Update(keyMsg)
+	model = newModel.(Model)
+	
+	if model.activeInput != 5 {
+		t.Errorf("Expected to be on body input, got active input %d", model.activeInput)
+	}
+	
+	if !model.bodyInput.Focused() {
+		t.Error("Body input should be focused when active for POST method")
+	}
+}
+
 func TestHeadersNavigation(t *testing.T) {
 	model := NewModel()
 	
@@ -616,6 +647,95 @@ func TestHeadersNavigation(t *testing.T) {
 	
 	if !model.headersInput.Focused() {
 		t.Error("Headers input should be focused when active")
+	}
+}
+
+func TestBodyInputWithPOST(t *testing.T) {
+	model := NewModel()
+	
+	// Change to POST method first
+	model.selectedMethod = 1 // POST
+	model.activeInput = 5    // Body input
+	
+	// Check that body input is focused for POST
+	model.bodyInput.Focus()
+	if !model.bodyInput.Focused() {
+		t.Error("Body input should be focused for POST method")
+	}
+	
+	// Check that method supports body
+	if !model.methodSupportsBody() {
+		t.Error("POST method should support body")
+	}
+}
+
+func TestBodyInputVisibility(t *testing.T) {
+	model := NewModel()
+	
+	// Test methods that support body
+	bodyMethods := []int{1, 2, 3, 8} // POST, PUT, DELETE, PATCH
+	for _, methodIndex := range bodyMethods {
+		model.selectedMethod = methodIndex
+		if !model.methodSupportsBody() {
+			t.Errorf("Method %s should support body", model.httpMethods[methodIndex])
+		}
+	}
+	
+	// Test methods that don't support body
+	noBodyMethods := []int{0, 4, 5, 6, 7} // GET, OPTIONS, HEAD, TRACE, CONNECT
+	for _, methodIndex := range noBodyMethods {
+		model.selectedMethod = methodIndex
+		if model.methodSupportsBody() {
+			t.Errorf("Method %s should not support body", model.httpMethods[methodIndex])
+		}
+	}
+}
+
+func TestStartCallWithBody(t *testing.T) {
+	model := NewModel()
+	model.selectedMethod = 1 // POST method
+
+	// Set valid input values including body
+	model.urlInput.SetValue("https://example.com")
+	model.attemptsInput.SetValue("5")
+	model.concurrentInput.SetValue("3")
+	model.bodyInput.SetValue(`{"test": "data", "value": 123}`)
+
+	// Trigger startCall
+	newModel, _ := model.startCall()
+
+	// Should not have error
+	if newModel.error != "" {
+		t.Errorf("Expected no error, got: %s", newModel.error)
+	}
+
+	// Should have config set
+	if newModel.callConfig == nil {
+		t.Error("Expected callConfig to be set")
+	}
+}
+
+func TestStartCallWithoutBodyForGET(t *testing.T) {
+	model := NewModel()
+	model.selectedMethod = 0 // GET method
+
+	// Set valid input values, body should be ignored for GET
+	model.urlInput.SetValue("https://example.com")
+	model.attemptsInput.SetValue("5")
+	model.concurrentInput.SetValue("3")
+	model.bodyInput.SetValue(`{"this": "should be ignored"}`)
+
+	// Trigger startCall
+	newModel, _ := model.startCall()
+
+	// Should not have error
+	if newModel.error != "" {
+		t.Errorf("Expected no error, got: %s", newModel.error)
+	}
+
+	// Should have config set
+	if newModel.callConfig == nil {
+		t.Error("Expected callConfig to be set")
 	}
 }
 
