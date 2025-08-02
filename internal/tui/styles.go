@@ -195,36 +195,110 @@ func StatusMessage(message string, msgType string) string {
 	}
 }
 
-// ProgressBar renders a progress bar
+// ProgressBar renders a colorful animated progress bar
 func ProgressBar(current, total int) string {
+	return ProgressBarAnimated(current, total, 0)
+}
+
+// ProgressBarAnimated renders a progress bar with animation frame
+func ProgressBarAnimated(current, total, frame int) string {
 	if total == 0 {
 		return ""
 	}
 	
 	percentage := float64(current) / float64(total)
-	filled := int(percentage * 40) // 40 chars width
+	width := 50 // Increased width for better visual
+	filled := int(percentage * float64(width))
+	
+	// Define gradient colors for progress bar
+	gradientColors := []lipgloss.Color{
+		lipgloss.Color("#FF6B6B"), // Red
+		lipgloss.Color("#FFB347"), // Orange
+		lipgloss.Color("#FFE66D"), // Yellow
+		lipgloss.Color("#A8E6CF"), // Light Green
+		lipgloss.Color("#88D8C0"), // Teal
+		lipgloss.Color("#B4A7D6"), // Light Purple
+		lipgloss.Color("#DDA0DD"), // Plum
+		lipgloss.Color("#C084FC"), // Purple (our primary)
+		lipgloss.Color("#A855F7"), // Purple (our secondary)
+		lipgloss.Color("#8B5CF6"), // Deep Purple
+	}
 	
 	bar := ""
-	for i := 0; i < 40; i++ {
+	for i := 0; i < width; i++ {
 		if i < filled {
-			bar += lipgloss.NewStyle().Foreground(primaryColor).Render("█")
+			// Create gradient effect based on position
+			colorIndex := int(float64(i) / float64(width) * float64(len(gradientColors)-1))
+			if colorIndex >= len(gradientColors) {
+				colorIndex = len(gradientColors) - 1
+			}
+			
+			// Use different characters for animation effect with pulsing
+			char := "█"
+			if i == filled-1 && percentage < 1.0 {
+				// Animated edge character that pulses
+				animationChars := []string{"▓", "▒", "░", "▒"}
+				char = animationChars[frame%len(animationChars)]
+			}
+			
+			bar += lipgloss.NewStyle().
+				Foreground(gradientColors[colorIndex]).
+				Render(char)
 		} else {
-			bar += lipgloss.NewStyle().Foreground(mutedColor).Render("░")
+			// Empty part with subtle background
+			bar += lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#333333")).
+				Render("▒")
 		}
 	}
 	
-	return progressBarStyle.Render(
-		lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			bar,
-			lipgloss.NewStyle().Margin(0, 1).Render(
-				lipgloss.NewStyle().Foreground(secondaryColor).Bold(true).Render(
-					lipgloss.PlaceHorizontal(10, lipgloss.Right, 
-						fmt.Sprintf("%.1f%%", percentage*100),
-					),
-				),
-			),
-		),
-	)
+	// Create animated percentage display with color coding
+	percentStr := fmt.Sprintf("%.1f%%", percentage*100)
+	var percentColor lipgloss.Color
+	
+	switch {
+	case percentage < 0.25:
+		percentColor = lipgloss.Color("#FF6B6B") // Red for low progress
+	case percentage < 0.50:
+		percentColor = lipgloss.Color("#FFB347") // Orange for medium-low
+	case percentage < 0.75:
+		percentColor = lipgloss.Color("#FFE66D") // Yellow for medium
+	case percentage < 0.90:
+		percentColor = lipgloss.Color("#A8E6CF") // Green for high
+	default:
+		percentColor = lipgloss.Color("#8B5CF6") // Purple for near completion
+	}
+	
+	// Add sparkle effect for active progress
+	sparkle := ""
+	if percentage > 0 && percentage < 1.0 {
+		sparkle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#DDD6FE")).
+			Render(" ✨")
+	} else if percentage >= 1.0 {
+		sparkle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#10B981")).
+			Render(" ✅")
+	}
+	
+	// Create simple inline progress bar without complex borders
+	// Use square brackets for a cleaner look that won't break layout
+	leftBracket := lipgloss.NewStyle().Foreground(lipgloss.Color("#8B5CF6")).Render("[")
+	rightBracket := lipgloss.NewStyle().Foreground(lipgloss.Color("#8B5CF6")).Render("]")
+	
+	// Format percentage with fixed width
+	paddedPercent := fmt.Sprintf("%6s", percentStr)
+	percentFormatted := lipgloss.NewStyle().
+		Foreground(percentColor).
+		Bold(true).
+		Render(paddedPercent)
+	
+	// Format sparkle with fixed width
+	sparkleFormatted := fmt.Sprintf("%-3s", sparkle) // Left-align in 3 chars
+	
+	// Create single-line progress bar
+	progressLine := leftBracket + bar + rightBracket + " " + percentFormatted + " " + sparkleFormatted
+	
+	return progressLine
 }
 

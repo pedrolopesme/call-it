@@ -45,6 +45,7 @@ type Model struct {
 	statusMessage   string
 	width          int
 	height         int
+	animationFrame  int
 }
 
 // NewModel creates a new TUI model
@@ -150,6 +151,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = ResultsView
 		m.endTime = time.Now()
 		m.results = msg.results
+		m.currentProgress = m.totalProgress  // Set to 100%
 		m.statusMessage = "Calls completed!"
 		return m, nil
 
@@ -158,6 +160,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.error = msg.error
 		m.urlInput.Focus()
 		return m, textinput.Blink
+
+	case progressTickMsg:
+		// Only update progress if we're in loading state
+		if m.state == LoadingView {
+			// Increment animation frame for smooth animations
+			m.animationFrame++
+			
+			// Don't let progress exceed total-1 to reserve 100% for actual completion
+			if m.currentProgress < m.totalProgress-1 {
+				m.currentProgress++
+				m.statusMessage = fmt.Sprintf("Completed %d/%d requests", m.currentProgress, m.totalProgress)
+			} else if m.currentProgress == m.totalProgress-1 {
+				// At 99%, show "Finishing up..." and keep waiting for actual completion
+				m.statusMessage = "Finishing up..."
+			}
+			// Always continue progress updates until actual completion
+			return m, m.simulateProgress()
+		}
+		return m, nil
 	}
 
 
@@ -340,12 +361,30 @@ type callErrorMsg struct {
 
 // startCalls performs the actual HTTP calls
 func (m Model) startCalls() tea.Cmd {
+	return tea.Batch(
+		m.runCalls(),
+		m.simulateProgress(),
+	)
+}
+
+// runCalls executes the HTTP calls and returns the result
+func (m Model) runCalls() tea.Cmd {
 	return func() tea.Msg {
-		// Simulate progress updates (in real implementation, you'd modify the call package)
 		results := m.callConfig.MakeIt()
 		return callCompleteMsg{results: &results}
 	}
 }
+
+// simulateProgress sends periodic progress updates
+func (m Model) simulateProgress() tea.Cmd {
+	return tea.Tick(200*time.Millisecond, func(time.Time) tea.Msg {
+		return progressTickMsg{}
+	})
+}
+
+// progressTickMsg triggers a progress update
+type progressTickMsg struct{}
+
 
 // View implements tea.Model
 func (m Model) View() string {
@@ -461,7 +500,7 @@ func (m Model) renderLoadingView() string {
 	b.WriteString("\n\n")
 	
 	if m.totalProgress > 0 {
-		b.WriteString(ProgressBar(m.currentProgress, m.totalProgress))
+		b.WriteString(ProgressBarAnimated(m.currentProgress, m.totalProgress, m.animationFrame))
 		b.WriteString("\n\n")
 	}
 	

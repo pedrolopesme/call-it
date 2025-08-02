@@ -205,8 +205,8 @@ func TestProgressBar(t *testing.T) {
 					t.Errorf("Expected result to contain %s, got: %s", tt.expected, result)
 				}
 				
-				// Should contain progress bar characters
-				if !strings.Contains(result, "█") && !strings.Contains(result, "░") {
+				// Should contain progress bar characters (new colorful version uses different chars)
+				if !strings.Contains(result, "█") && !strings.Contains(result, "▒") && !strings.Contains(result, "▓") {
 					t.Error("Progress bar should contain progress characters")
 				}
 			}
@@ -227,6 +227,95 @@ func TestProgressBarEdgeCases(t *testing.T) {
 		t.Error("Current > total should show >100%")
 	}
 }
+
+func TestProgressBarAnimated(t *testing.T) {
+	// Test animated version
+	result := ProgressBarAnimated(5, 10, 0)
+	if result == "" {
+		t.Error("Animated progress bar should return content")
+	}
+	
+	// Should contain percentage
+	if !strings.Contains(result, "50.0%") {
+		t.Error("Animated progress bar should contain percentage")
+	}
+	
+	// Should contain progress characters
+	if !strings.Contains(result, "█") && !strings.Contains(result, "▒") {
+		t.Error("Animated progress bar should contain progress characters")
+	}
+	
+	// Test animation frames produce different results
+	result1 := ProgressBarAnimated(9, 10, 0)
+	result2 := ProgressBarAnimated(9, 10, 1)
+	if result1 == result2 {
+		t.Error("Different animation frames should produce different results")
+	}
+	
+	// Test completion shows checkmark
+	resultComplete := ProgressBarAnimated(10, 10, 0)
+	if !strings.Contains(resultComplete, "✅") {
+		t.Error("Completed progress should show checkmark")
+	}
+}
+
+func TestProgressBarColorGradient(t *testing.T) {
+	// Test that progress bars at different percentages have different visual appearance
+	// (We can't easily test colors, but we can test structure)
+	
+	tests := []struct {
+		name     string
+		current  int
+		total    int
+		expected string
+	}{
+		{"Low progress", 1, 10, "10.0%"},
+		{"Medium progress", 5, 10, "50.0%"},
+		{"High progress", 9, 10, "90.0%"},
+		{"Complete", 10, 10, "100.0%"},
+	}
+	
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ProgressBarAnimated(tt.current, tt.total, 0)
+			if !strings.Contains(result, tt.expected) {
+				t.Errorf("Expected progress bar to contain %s, got: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestProgressBarLayoutStability(t *testing.T) {
+	// Test that progress bar maintains consistent layout across animation frames
+	current, total := 5, 10
+	
+	// Collect results from multiple animation frames
+	var results []string
+	for frame := 0; frame < 10; frame++ {
+		result := ProgressBarAnimated(current, total, frame)
+		results = append(results, result)
+	}
+	
+	// All results should have exactly the same length (single-line layout)
+	baseLength := len(results[0])
+	for i, result := range results {
+		if len(result) != baseLength {
+			t.Errorf("Frame %d has different length: %d vs base %d", 
+				i, len(result), baseLength)
+		}
+		
+		// All should contain the same percentage
+		if !strings.Contains(result, "50.0%") {
+			t.Errorf("Frame %d missing expected percentage", i)
+		}
+		
+		// Should be single line (no newlines)
+		if strings.Contains(result, "\n") {
+			t.Errorf("Frame %d contains newline characters (should be single line)", i)
+		}
+	}
+}
+
 
 func TestStyleConsistency(t *testing.T) {
 	// Test that styles can render without errors

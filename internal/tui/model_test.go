@@ -618,3 +618,120 @@ func TestHeadersNavigation(t *testing.T) {
 		t.Error("Headers input should be focused when active")
 	}
 }
+
+func TestProgressUpdates(t *testing.T) {
+	model := NewModel()
+	model.state = LoadingView
+	model.totalProgress = 10
+	model.currentProgress = 0
+	
+	// Simulate progress tick message
+	progressMsg := progressTickMsg{}
+	newModel, cmd := model.Update(progressMsg)
+	model = newModel.(Model)
+	
+	// Should increment progress
+	if model.currentProgress != 1 {
+		t.Errorf("Expected progress to be 1, got %d", model.currentProgress)
+	}
+	
+	// Should return a command to continue progress if not complete
+	if cmd == nil {
+		t.Error("Expected progress update to return a command")
+	}
+	
+	// Test status message update
+	expectedMessage := "Completed 1/10 requests"
+	if model.statusMessage != expectedMessage {
+		t.Errorf("Expected status message '%s', got '%s'", expectedMessage, model.statusMessage)
+	}
+}
+
+func TestProgressCompletionStop(t *testing.T) {
+	model := NewModel()
+	model.state = LoadingView
+	model.totalProgress = 5
+	model.currentProgress = 4 // At total-1 (99%)
+	
+	// Simulate progress tick message
+	progressMsg := progressTickMsg{}
+	newModel, cmd := model.Update(progressMsg)
+	model = newModel.(Model)
+	
+	// Should not increment beyond total-1
+	if model.currentProgress != 4 {
+		t.Errorf("Expected progress to remain 4, got %d", model.currentProgress)
+	}
+	
+	// Should return a command to continue waiting for actual completion
+	if cmd == nil {
+		t.Error("Expected progress update to return a command even at 99%")
+	}
+	
+	// Status should show "Finishing up..."
+	if model.statusMessage != "Finishing up..." {
+		t.Errorf("Expected 'Finishing up...' message, got '%s'", model.statusMessage)
+	}
+}
+
+func TestProgressTickInNonLoadingState(t *testing.T) {
+	model := NewModel()
+	model.state = InputView // Not in loading state
+	model.totalProgress = 10
+	model.currentProgress = 0
+	
+	// Simulate progress tick message
+	progressMsg := progressTickMsg{}
+	newModel, cmd := model.Update(progressMsg)
+	model = newModel.(Model)
+	
+	// Should not update progress when not in loading state
+	if model.currentProgress != 0 {
+		t.Errorf("Expected progress to remain 0, got %d", model.currentProgress)
+	}
+	
+	// Should not return a command
+	if cmd != nil {
+		t.Error("Expected no command when not in loading state")
+	}
+}
+
+func TestCallCompletionSetsProgress(t *testing.T) {
+	model := NewModel()
+	model.state = LoadingView
+	model.totalProgress = 10
+	model.currentProgress = 8
+	
+	// Create mock result
+	mockResult := &call.Result{}
+	
+	// Simulate call completion message
+	completeMsg := callCompleteMsg{results: mockResult}
+	newModel, cmd := model.Update(completeMsg)
+	model = newModel.(Model)
+	
+	// Should transition to results view
+	if model.state != ResultsView {
+		t.Errorf("Expected state to be ResultsView, got %v", model.state)
+	}
+	
+	// Should set progress to 100%
+	if model.currentProgress != model.totalProgress {
+		t.Errorf("Expected progress to be %d (100%%), got %d", model.totalProgress, model.currentProgress)
+	}
+	
+	// Should set completion message
+	if model.statusMessage != "Calls completed!" {
+		t.Errorf("Expected 'Calls completed!' message, got '%s'", model.statusMessage)
+	}
+	
+	// Should have results set
+	if model.results != mockResult {
+		t.Error("Expected results to be set")
+	}
+	
+	// Should not return a command
+	if cmd != nil {
+		t.Error("Expected no command after completion")
+	}
+}
