@@ -20,6 +20,7 @@ type ViewState int
 
 const (
 	InputView ViewState = iota
+	CurlInputView
 	LoadingView
 	ResultsView
 )
@@ -32,6 +33,7 @@ type Model struct {
 	concurrentInput textinput.Model
 	headersInput textinput.Model
 	bodyInput    textinput.Model
+	curlInput    textinput.Model
 	httpMethods  []string
 	selectedMethod int
 	activeInput  int
@@ -78,6 +80,11 @@ func NewModel() Model {
 	bodyInput.CharLimit = 1024
 	bodyInput.Width = 60
 
+	curlInput := textinput.New()
+	curlInput.Placeholder = `curl -X POST https://httpbin.org/post -H "Content-Type: application/json" -d '{"key": "value"}'`
+	curlInput.CharLimit = 8192  // Increased limit for complex curl commands
+	curlInput.Width = 100
+
 	// Initialize spinner
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -90,6 +97,7 @@ func NewModel() Model {
 		concurrentInput: concurrentInput,
 		headersInput:    headersInput,
 		bodyInput:       bodyInput,
+		curlInput:       curlInput,
 		httpMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "TRACE", "CONNECT", "PATCH"},
 		selectedMethod:  0, // Default to GET
 		activeInput:     0,
@@ -117,6 +125,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch m.state {
 		case InputView:
 			return m.updateInputView(msg)
+		case CurlInputView:
+			return m.updateCurlInputView(msg)
 		case LoadingView:
 			if msg.String() == "ctrl+c" || msg.String() == "q" {
 				return m, tea.Quit
@@ -200,6 +210,12 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c":
 		return m, tea.Quit
+	case "ctrl+p":
+		// Switch to curl paste mode
+		m.state = CurlInputView
+		m.error = ""
+		m.curlInput.Focus()
+		return m, textinput.Blink
 	case "tab", "shift+tab", "up", "down":
 		// Switch between inputs, skipping body input if method doesn't support it
 		if msg.String() == "tab" || msg.String() == "down" {
@@ -281,6 +297,87 @@ func (m Model) updateInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	
 	return m, tea.Batch(cmds...)
+}
+
+// updateCurlInputView handles curl input view updates
+func (m Model) updateCurlInputView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg.String() {
+	case "ctrl+c":
+		return m, tea.Quit
+	case "esc":
+		// Go back to main input view
+		m.state = InputView
+		m.error = ""
+		m.urlInput.Focus()
+		return m, textinput.Blink
+	case "enter":
+		// Parse curl command and populate fields
+		return m.parseCurlAndContinue()
+	default:
+		// Pass key to curl input
+		m.curlInput, cmd = m.curlInput.Update(msg)
+	}
+	
+	return m, cmd
+}
+
+// parseCurlAndContinue parses the curl command and populates the form fields
+func (m Model) parseCurlAndContinue() (Model, tea.Cmd) {
+	curlCommand := strings.TrimSpace(m.curlInput.Value())
+	if curlCommand == "" {
+		m.error = "Please enter a curl command"
+		return m, nil
+	}
+
+	// Process the curl command
+
+	// Validate and parse curl command
+	if err := call.ValidateCurlCommand(curlCommand); err != nil {
+		m.error = fmt.Sprintf("Validation failed: %v", err)
+		return m, nil
+	}
+
+	config, err := call.ParseCurlCommand(curlCommand)
+	if err != nil {
+		m.error = fmt.Sprintf("Parsing failed: %v", err)
+		return m, nil
+	}
+
+	// Populate form fields from parsed config
+	m.urlInput.SetValue(config.URL)
+	
+	// Set HTTP method
+	for i, method := range m.httpMethods {
+		if method == config.Method {
+			m.selectedMethod = i
+			break
+		}
+	}
+
+	// Set headers
+	if config.Header != nil {
+		var headerPairs []string
+		for key, values := range config.Header {
+			for _, value := range values {
+				headerPairs = append(headerPairs, fmt.Sprintf("%s:%s", key, value))
+			}
+		}
+		m.headersInput.SetValue(strings.Join(headerPairs, ","))
+	}
+
+	// Set body
+	if config.Body != "" {
+		m.bodyInput.SetValue(config.Body)
+	}
+
+	// Switch back to input view
+	m.state = InputView
+	m.error = ""
+	m.urlInput.Focus()
+	
+	return m, textinput.Blink
 }
 
 // startCall validates inputs and starts the HTTP calls
@@ -428,6 +525,8 @@ func (m Model) View() string {
 	switch m.state {
 	case InputView:
 		return m.renderInputView()
+	case CurlInputView:
+		return m.renderCurlInputView()
 	case LoadingView:
 		return m.renderLoadingView()
 	case ResultsView:
@@ -534,7 +633,42 @@ func (m Model) renderInputView() string {
 	}
 	
 	// Instructions
-	instructions := "Press Tab to navigate • Left/Right for method • Enter to start • Ctrl+C to quit"
+	instructions := "Press Tab to navigate • Left/Right for method • Enter to start • Ctrl+P to paste curl • Ctrl+C to quit"
+	b.WriteString(helpStyle.Render(instructions))
+	
+	return baseStyle.Render(b.String())
+}
+
+// renderCurlInputView renders the curl input screen
+func (m Model) renderCurlInputView() string {
+	var b strings.Builder
+	
+	// Header
+	b.WriteString(RenderLogo())
+	b.WriteString("\n")
+	b.WriteString(subtitleStyle.Render("Paste cURL Command"))
+	b.WriteString("\n")
+	b.WriteString(helpStyle.Render(fmt.Sprintf("Version: %s", version.String())))
+	b.WriteString("\n\n")
+	
+	// Form
+	b.WriteString(titleStyle.Render("📋 Paste Your cURL Command"))
+	b.WriteString("\n\n")
+	
+	// Curl Input
+	b.WriteString(focusedLabelStyle.Render("► cURL Command:"))
+	b.WriteString("\n")
+	b.WriteString(m.curlInput.View())
+	b.WriteString("\n\n")
+	
+	// Error message
+	if m.error != "" {
+		b.WriteString(StatusMessage(m.error, "error"))
+		b.WriteString("\n\n")
+	}
+	
+	// Instructions
+	instructions := "Enter to parse and continue • Esc to go back • Ctrl+C to quit"
 	b.WriteString(helpStyle.Render(instructions))
 	
 	return baseStyle.Render(b.String())
